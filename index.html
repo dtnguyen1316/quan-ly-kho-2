@@ -649,20 +649,21 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, setDoc, getDoc, onSnapshot, collection } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { initializeApp } from "firebase/app";
+import { getAnalytics } from "firebase/analytics";
 
         // Firebase Config Setup (Tự động thích ứng hoặc sử dụng mặc định)
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'kho-hang-app';
-        const firebaseConfig = typeof __firebase_config !== 'undefined' 
-            ? JSON.parse(__firebase_config) 
-            : {
-                // Nhập thông tin cấu hình Firebase của bạn ở đây nếu triển khai riêng
-                apiKey: "DEMO_KEY",
-                authDomain: "demo.firebaseapp.com",
-                projectId: "demo-app",
-                storageBucket: "demo.appspot.com",
-                messagingSenderId: "123456789",
-                appId: "1:123456789:web:demo"
-            };
+        const firebaseConfig = {
+  apiKey: "AIzaSyB5u2TwGLx6d7xJsgyFVG8KVNJOqpq69uY",
+  authDomain: "trinhd-9ddf5.firebaseapp.com",
+  databaseURL: "https://trinhd-9ddf5-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "trinhd-9ddf5",
+  storageBucket: "trinhd-9ddf5.firebasestorage.app",
+  messagingSenderId: "83255259757",
+  appId: "1:83255259757:web:aa18ffeba20d2950428564",
+  measurementId: "G-YBHWJ92BDF"
+};
 
         let app, db, auth;
         let currentUser = null;
