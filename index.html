@@ -646,24 +646,27 @@
 
     <!-- FIREBASE CLOUD DATABASE SCRIPT -->
     <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, setDoc, getDoc, onSnapshot, collection } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-        import { initializeApp } from "firebase/app";
-import { getAnalytics } from "firebase/analytics";
+     import { initializeApp } from "https://www.gstatic.com/firebasejs/13.1.0/firebase-app.js";
+  import { getAnalytics } from "https://www.gstatic.com/firebasejs/13.1.0/firebase-analytics.js";
+  // TODO: Add SDKs for Firebase products that you want to use
+  // https://firebase.google.com/docs/web/setup#available-libraries
 
-        // Firebase Config Setup (Tự động thích ứng hoặc sử dụng mặc định)
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'kho-hang-app';
-        const firebaseConfig = {
-  apiKey: "AIzaSyB5u2TwGLx6d7xJsgyFVG8KVNJOqpq69uY",
-  authDomain: "trinhd-9ddf5.firebaseapp.com",
-  databaseURL: "https://trinhd-9ddf5-default-rtdb.asia-southeast1.firebasedatabase.app",
-  projectId: "trinhd-9ddf5",
-  storageBucket: "trinhd-9ddf5.firebasestorage.app",
-  messagingSenderId: "83255259757",
-  appId: "1:83255259757:web:aa18ffeba20d2950428564",
-  measurementId: "G-YBHWJ92BDF"
-};
+  // Your web app's Firebase configuration
+  // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+  const firebaseConfig = {
+    apiKey: "AIzaSyB5u2TwGLx6d7xJsgyFVG8KVNJOqpq69uY",
+    authDomain: "trinhd-9ddf5.firebaseapp.com",
+    databaseURL: "https://trinhd-9ddf5-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId: "trinhd-9ddf5",
+    storageBucket: "trinhd-9ddf5.firebasestorage.app",
+    messagingSenderId: "83255259757",
+    appId: "1:83255259757:web:aa18ffeba20d2950428564",
+    measurementId: "G-YBHWJ92BDF"
+  };
+
+  // Initialize Firebase
+  const app = initializeApp(firebaseConfig);
+  const analytics = getAnalytics(app);
 
         let app, db, auth;
         let currentUser = null;
