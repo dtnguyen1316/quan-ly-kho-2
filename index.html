@@ -17,7 +17,6 @@
         body {
             font-family: 'Inter', sans-serif;
         }
-        /* Custom scrollbar */
         ::-webkit-scrollbar {
             width: 6px;
             height: 6px;
@@ -78,10 +77,10 @@
             </nav>
         </div>
 
-        <!-- User / Footer info -->
+        <!-- Footer info -->
         <div class="p-4 border-t border-slate-800 text-xs text-slate-500 flex items-center justify-between">
-            <span>Phiên bản v1.3 (Cloud)</span>
-            <span id="cloud-status-dot" class="inline-block w-2 h-2 rounded-full bg-amber-500" title="Đang kết nối Đám mây..."></span>
+            <span>Phiên bản v1.3 (Firebase)</span>
+            <span id="cloud-status-dot" class="inline-block w-2 h-2 rounded-full bg-amber-500" title="Đang kết nối Firebase..."></span>
         </div>
     </aside>
 
@@ -91,14 +90,12 @@
         <!-- HEADER -->
         <header class="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-6 shrink-0">
             <div class="flex items-center gap-4">
-                <!-- Mobile Menu Button -->
                 <button id="mobile-menu-btn" class="md:hidden text-slate-600 hover:text-slate-900 focus:outline-none">
                     <i class="fa-solid fa-bars text-xl"></i>
                 </button>
                 <h1 id="page-title" class="text-xl font-bold text-slate-800">Tổng quan</h1>
             </div>
 
-            <!-- Header Quick Actions & Profile -->
             <div class="flex items-center gap-4">
                 <button onclick="switchTab('export')" class="bg-blue-600 hover:bg-blue-700 text-white text-sm px-4 py-2 rounded-lg font-medium flex items-center gap-2 shadow-sm transition-all">
                     <i class="fa-solid fa-plus"></i>
@@ -120,7 +117,6 @@
 
             <!-- TAB 1: DASHBOARD -->
             <section id="tab-dashboard" class="tab-content space-y-6">
-                <!-- Stat Cards -->
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                     <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
                         <div>
@@ -167,9 +163,7 @@
                     </div>
                 </div>
 
-                <!-- Charts & Low Stock Warning Table -->
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    <!-- Chart -->
                     <div class="lg:col-span-2 bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
                         <div class="flex items-center justify-between mb-4">
                             <h2 class="font-bold text-slate-800">Biểu Đồ Xuất/Nhập Kho</h2>
@@ -180,7 +174,6 @@
                         </div>
                     </div>
 
-                    <!-- Low Stock Alert List -->
                     <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col">
                         <div class="flex items-center justify-between mb-4">
                             <h2 class="font-bold text-slate-800 text-rose-600 flex items-center gap-2">
@@ -188,23 +181,19 @@
                             </h2>
                             <span class="text-xs bg-rose-100 text-rose-700 px-2 py-0.5 rounded-full font-medium" id="low-stock-badge">0</span>
                         </div>
-                        <div class="flex-1 overflow-y-auto max-h-64 divide-y divide-slate-100" id="low-stock-list">
-                            <!-- JS Inject Low Stock -->
-                        </div>
+                        <div class="flex-1 overflow-y-auto max-h-64 divide-y divide-slate-100" id="low-stock-list"></div>
                     </div>
                 </div>
             </section>
 
             <!-- TAB 2: PRODUCTS MANAGEMENT -->
             <section id="tab-products" class="tab-content hidden space-y-6">
-                <!-- Action Header -->
                 <div class="flex flex-col sm:flex-row gap-4 items-center justify-between bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
                     <div class="relative w-full sm:w-80">
                         <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
                         <input type="text" id="product-search" oninput="renderProducts()" placeholder="Tìm theo tên hoặc mã SP..." class="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
                     </div>
                     <div class="flex flex-wrap items-center gap-3 w-full sm:w-auto justify-end">
-                        <!-- Bulk Delete Button -->
                         <button id="btn-delete-selected" onclick="deleteSelectedProducts()" class="hidden bg-rose-600 hover:bg-rose-700 text-white text-sm px-4 py-2 rounded-lg font-medium flex items-center gap-2 whitespace-nowrap transition-all shadow-sm">
                             <i class="fa-solid fa-trash-can"></i> Xóa sản phẩm đã chọn (<span id="selected-count">0</span>)
                         </button>
@@ -224,7 +213,6 @@
                     </div>
                 </div>
 
-                <!-- Products Table -->
                 <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
                     <div class="overflow-x-auto">
                         <table class="w-full text-left text-sm text-slate-600">
@@ -242,18 +230,15 @@
                                     <th class="px-6 py-4 text-center">Thao Tác</th>
                                 </tr>
                             </thead>
-                            <tbody id="products-table-body" class="divide-y divide-slate-200">
-                                <!-- JS Injected Content -->
-                            </tbody>
+                            <tbody id="products-table-body" class="divide-y divide-slate-200"></tbody>
                         </table>
                     </div>
                 </div>
             </section>
 
-            <!-- TAB 3: IMPORT (NHẬP KHO) -->
+            <!-- TAB 3: IMPORT -->
             <section id="tab-import" class="tab-content hidden space-y-6">
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    <!-- Form Nhập Kho Nhiều Sản Phẩm -->
                     <div class="lg:col-span-2 bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-4">
                         <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b pb-3 gap-2">
                             <h2 class="text-lg font-bold text-slate-800 flex items-center gap-2">
@@ -264,7 +249,6 @@
                             </button>
                         </div>
                         
-                        <!-- Chọn sản phẩm thêm vào danh sách nhập -->
                         <div class="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-3">
                             <label class="block text-xs font-semibold text-slate-600 uppercase">Thêm sản phẩm vào phiếu nhập</label>
                             <div class="flex flex-col sm:flex-row gap-3">
@@ -277,7 +261,6 @@
                             </div>
                         </div>
 
-                        <!-- Bảng Danh Sách Sản Phẩm Nhập -->
                         <div class="border border-slate-200 rounded-xl overflow-hidden">
                             <div class="overflow-x-auto max-h-72">
                                 <table class="w-full text-left text-sm text-slate-600">
@@ -290,14 +273,11 @@
                                             <th class="p-3 w-12 text-center">Xóa</th>
                                         </tr>
                                     </thead>
-                                    <tbody id="import-items-tbody" class="divide-y divide-slate-100">
-                                        <!-- JS Items Injected -->
-                                    </tbody>
+                                    <tbody id="import-items-tbody" class="divide-y divide-slate-100"></tbody>
                                 </table>
                             </div>
                         </div>
 
-                        <!-- Thông tin nhà cung cấp & Ghi chú -->
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
                             <div>
                                 <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Nhà Cung Cấp</label>
@@ -305,7 +285,7 @@
                             </div>
                             <div>
                                 <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Ghi Chú Nhập Kho</label>
-                                <input type="text" id="import-note" placeholder="Chi tiết lô hàng, mã hóa đơn NCC..." class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-sm focus:ring-2 focus:ring-emerald-500 outline-none">
+                                <input type="text" id="import-note" placeholder="Chi tiết lô hàng..." class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-sm focus:ring-2 focus:ring-emerald-500 outline-none">
                             </div>
                         </div>
 
@@ -320,25 +300,22 @@
                         </div>
                     </div>
 
-                    <!-- Hướng dẫn / Thông tin nhanh -->
                     <div class="bg-emerald-50 border border-emerald-200 p-6 rounded-xl space-y-4 h-fit">
                         <h3 class="font-bold text-emerald-900 flex items-center gap-2">
                             <i class="fa-solid fa-circle-info"></i> Quy trình Nhập kho theo lô
                         </h3>
                         <ul class="text-sm text-emerald-800 space-y-2 list-disc list-inside">
-                            <li>Chọn sản phẩm và bấm **"Thêm Vào Danh Sách"** để tạo danh sách nhập kho.</li>
-                            <li>Có thể thêm **nhiều sản phẩm khác nhau** vào cùng 1 phiếu nhập kho.</li>
-                            <li>Tùy chỉnh **Số lượng** và **Giá nhập** trực tiếp trong bảng danh sách.</li>
-                            <li>Số lượng nhập sẽ được **cộng trực tiếp** vào tồn kho của từng sản phẩm ngay sau khi xác nhận.</li>
+                            <li>Chọn sản phẩm và bấm **"Thêm Vào Danh Sách"** để tạo phiếu.</li>
+                            <li>Có thể thêm nhiều sản phẩm khác nhau vào cùng 1 phiếu.</li>
+                            <li>Số lượng nhập sẽ được cộng trực tiếp vào tồn kho sau khi xác nhận.</li>
                         </ul>
                     </div>
                 </div>
             </section>
 
-            <!-- TAB 4: EXPORT / SALE (BÁN HÀNG & XUẤT KHO) -->
+            <!-- TAB 4: EXPORT / SALE -->
             <section id="tab-export" class="tab-content hidden space-y-6">
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    <!-- Danh sách chọn sản phẩm bán -->
                     <div class="lg:col-span-2 space-y-4">
                         <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex gap-3">
                             <div class="relative flex-1">
@@ -347,13 +324,9 @@
                             </div>
                         </div>
 
-                        <!-- Grid Sản phẩm -->
-                        <div id="pos-product-grid" class="grid grid-cols-2 sm:grid-cols-3 gap-4 max-h-[calc(100vh-280px)] overflow-y-auto pr-1">
-                            <!-- JS Inject Cards -->
-                        </div>
+                        <div id="pos-product-grid" class="grid grid-cols-2 sm:grid-cols-3 gap-4 max-h-[calc(100vh-280px)] overflow-y-auto pr-1"></div>
                     </div>
 
-                    <!-- Giỏ hàng / Đơn xuất bán -->
                     <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between h-[calc(100vh-180px)]">
                         <div>
                             <div class="border-b pb-3 mb-3 flex justify-between items-center">
@@ -363,13 +336,9 @@
                                 <button onclick="clearCart()" class="text-xs text-rose-500 hover:underline">Xóa tất cả</button>
                             </div>
 
-                            <!-- Cart Items -->
-                            <div id="cart-items" class="space-y-3 overflow-y-auto max-h-[320px] pr-1 divide-y divide-slate-100">
-                                <!-- JS Injected Cart Items -->
-                            </div>
+                            <div id="cart-items" class="space-y-3 overflow-y-auto max-h-[320px] pr-1 divide-y divide-slate-100"></div>
                         </div>
 
-                        <!-- Billing Details -->
                         <div class="border-t pt-4 space-y-3">
                             <div>
                                 <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Tên Khách Hàng</label>
@@ -395,9 +364,8 @@
                 </div>
             </section>
 
-            <!-- TAB 5: HISTORY (LỊCH SỬ GIAO DỊCH) -->
+            <!-- TAB 5: HISTORY -->
             <section id="tab-history" class="tab-content hidden space-y-6">
-                <!-- Filter Bar -->
                 <div class="flex flex-col sm:flex-row gap-4 justify-between bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
                     <div class="flex items-center gap-3">
                         <select id="history-type-filter" onchange="renderHistory()" class="bg-slate-50 border border-slate-200 text-sm rounded-lg p-2 focus:ring-2 focus:ring-blue-500 outline-none">
@@ -409,7 +377,6 @@
                     <span class="text-xs text-slate-500 self-center">Tự động lưu trữ lịch sử giao dịch</span>
                 </div>
 
-                <!-- History Table -->
                 <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
                     <div class="overflow-x-auto">
                         <table class="w-full text-left text-sm text-slate-600">
@@ -424,9 +391,7 @@
                                     <th class="px-6 py-4 text-center">Thao Tác</th>
                                 </tr>
                             </thead>
-                            <tbody id="history-table-body" class="divide-y divide-slate-200">
-                                <!-- JS Injected Content -->
-                            </tbody>
+                            <tbody id="history-table-body" class="divide-y divide-slate-200"></tbody>
                         </table>
                     </div>
                 </div>
@@ -489,7 +454,7 @@
         </div>
     </div>
 
-    <!-- MODAL: IMPORT PRODUCTS FROM EXCEL -->
+    <!-- MODAL: EXCEL -->
     <div id="excel-modal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center hidden z-50 p-4">
         <div class="bg-white rounded-xl shadow-xl w-full max-w-2xl overflow-hidden animate-in fade-in zoom-in duration-150 flex flex-col max-h-[90vh]">
             <div class="px-6 py-4 border-b border-slate-200 flex justify-between items-center bg-slate-50">
@@ -500,19 +465,18 @@
             </div>
             
             <div class="p-6 space-y-4 overflow-y-auto flex-1">
-                <!-- Instructions / Template Download -->
                 <div class="p-4 bg-emerald-50 border border-emerald-200 rounded-xl space-y-2 text-xs text-emerald-900">
                     <p class="font-bold text-sm text-emerald-950 flex items-center gap-2">
                         <i class="fa-solid fa-circle-info"></i> Hướng dẫn định dạng file Excel:
                     </p>
-                    <p>Các cột trong file Excel nên chứa các tiêu đề sau (hoặc tương tự):</p>
+                    <p>Các cột trong file Excel nên chứa các tiêu đề sau:</p>
                     <div class="grid grid-cols-2 sm:grid-cols-3 gap-2 font-mono text-[11px] bg-white p-2.5 rounded border border-emerald-200 text-slate-700">
-                        <div>• <b>Mã SP</b> (vd: SP01)</div>
-                        <div>• <b>Tên SP</b> (vd: iPhone)</div>
-                        <div>• <b>Danh Mục</b> (vd: Điện thoại)</div>
-                        <div>• <b>Giá Nhập</b> (vd: 100000)</div>
-                        <div>• <b>Giá Bán</b> (vd: 150000)</div>
-                        <div>• <b>Tồn Kho</b> (vd: 20)</div>
+                        <div>• <b>Mã SP</b></div>
+                        <div>• <b>Tên SP</b></div>
+                        <div>• <b>Danh Mục</b></div>
+                        <div>• <b>Giá Nhập</b></div>
+                        <div>• <b>Giá Bán</b></div>
+                        <div>• <b>Tồn Kho</b></div>
                     </div>
                     <div class="pt-1 flex justify-between items-center">
                         <span class="text-slate-500">Chưa có file mẫu?</span>
@@ -522,19 +486,16 @@
                     </div>
                 </div>
 
-                <!-- Upload Area -->
                 <div class="border-2 border-dashed border-slate-300 hover:border-emerald-500 transition-colors rounded-xl p-6 text-center bg-slate-50 hover:bg-emerald-50/30 cursor-pointer" onclick="document.getElementById('excel-file-input').click()">
                     <input type="file" id="excel-file-input" accept=".xlsx, .xls, .csv" onchange="handleExcelFileSelect(event)" class="hidden">
                     <i class="fa-solid fa-cloud-arrow-up text-4xl text-slate-400 mb-2"></i>
                     <p class="text-sm font-semibold text-slate-700">Bấm vào đây để chọn file Excel</p>
-                    <p class="text-xs text-slate-400 mt-1">Hỗ trợ định dạng .xlsx, .xls, .csv</p>
                     <p id="excel-file-name" class="text-xs font-bold text-emerald-600 mt-2 hidden"></p>
                 </div>
 
-                <!-- Preview Table -->
                 <div id="excel-preview-container" class="hidden space-y-2">
                     <div class="flex justify-between items-center">
-                        <h4 class="text-xs font-bold uppercase text-slate-600">Xem trước dữ liệu đọc từ Excel:</h4>
+                        <h4 class="text-xs font-bold uppercase text-slate-600">Xem trước dữ liệu:</h4>
                         <span id="excel-preview-count" class="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full font-medium">0 sản phẩm</span>
                     </div>
                     <div class="max-h-56 overflow-y-auto border border-slate-200 rounded-lg">
@@ -549,9 +510,7 @@
                                     <th class="p-2 text-center">Tồn Kho</th>
                                 </tr>
                             </thead>
-                            <tbody id="excel-preview-tbody" class="divide-y divide-slate-100">
-                                <!-- Preview Rows -->
-                            </tbody>
+                            <tbody id="excel-preview-tbody" class="divide-y divide-slate-100"></tbody>
                         </table>
                     </div>
                 </div>
@@ -566,7 +525,7 @@
         </div>
     </div>
 
-    <!-- MODAL: INVOICE PRINT PREVIEW -->
+    <!-- MODAL: INVOICE -->
     <div id="invoice-modal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center hidden z-50 p-4">
         <div class="bg-white rounded-xl shadow-xl w-full max-w-lg overflow-hidden p-6 space-y-4">
             <div id="invoice-print-area" class="space-y-4 text-slate-800">
@@ -588,9 +547,7 @@
                             <th class="py-2 text-right">Thành tiền</th>
                         </tr>
                     </thead>
-                    <tbody id="inv-items-body" class="divide-y divide-slate-100">
-                        <!-- JS items -->
-                    </tbody>
+                    <tbody id="inv-items-body" class="divide-y divide-slate-100"></tbody>
                 </table>
                 <div class="border-t pt-3 flex justify-between font-bold text-sm">
                     <span>Tổng cộng:</span>
@@ -609,23 +566,19 @@
         </div>
     </div>
 
-    <!-- MODAL: CUSTOM CONFIRMATION DIALOG -->
+    <!-- MODAL: CONFIRMATION -->
     <div id="confirm-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center hidden z-[60] p-4 transition-all duration-200">
         <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden transform transition-all scale-95 opacity-0 animate-in fade-in zoom-in duration-200" id="confirm-modal-box">
             <div class="p-6 text-center space-y-4">
-                <!-- Icon Warning -->
                 <div class="w-14 h-14 bg-rose-100 text-rose-600 rounded-full flex items-center justify-center mx-auto text-2xl shadow-inner">
                     <i class="fa-solid fa-triangle-exclamation"></i>
                 </div>
-                <!-- Header & Message -->
                 <div>
                     <h3 id="confirm-title" class="text-lg font-bold text-slate-900">Xác nhận thao tác</h3>
                     <p id="confirm-message" class="text-xs text-slate-500 mt-2 leading-relaxed">Bạn có chắc chắn muốn thực hiện hành động này không?</p>
                 </div>
-                <!-- Additional Details Box -->
                 <div id="confirm-detail" class="hidden text-xs bg-slate-50 border border-slate-200 p-3 rounded-xl text-slate-700 text-left font-medium"></div>
             </div>
-            <!-- Action Buttons -->
             <div class="bg-slate-50 px-6 py-3.5 border-t border-slate-100 flex items-center justify-end gap-3">
                 <button type="button" id="confirm-btn-cancel" class="px-4 py-2 text-xs font-semibold text-slate-600 bg-white border border-slate-200 hover:bg-slate-100 rounded-xl transition-all shadow-sm">
                     Hủy bỏ
@@ -638,124 +591,85 @@
         </div>
     </div>
 
-    <!-- CUSTOM NOTIFICATION BOX -->
+    <!-- TOAST NOTIFICATION -->
     <div id="toast" class="fixed bottom-5 right-5 bg-slate-900 text-white px-5 py-3 rounded-xl shadow-2xl flex items-center gap-3 transition-all duration-300 transform translate-y-20 opacity-0 z-50">
         <i id="toast-icon" class="fa-solid fa-circle-check text-emerald-400 text-lg"></i>
         <span id="toast-msg" class="text-sm font-medium">Thông báo ở đây</span>
     </div>
 
-    <!-- FIREBASE CLOUD DATABASE SCRIPT -->
+    <!-- FIREBASE REALTIME DATABASE SCRIPT -->
     <script type="module">
-     import { initializeApp } from "https://www.gstatic.com/firebasejs/13.1.0/firebase-app.js";
-  import { getAnalytics } from "https://www.gstatic.com/firebasejs/13.1.0/firebase-analytics.js";
-  // TODO: Add SDKs for Firebase products that you want to use
-  // https://firebase.google.com/docs/web/setup#available-libraries
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/13.1.0/firebase-app.js";
+        import { getAnalytics } from "https://www.gstatic.com/firebasejs/13.1.0/firebase-analytics.js";
+        import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/13.1.0/firebase-database.js";
 
-  // Your web app's Firebase configuration
-  // For Firebase JS SDK v7.20.0 and later, measurementId is optional
-  const firebaseConfig = {
-    apiKey: "AIzaSyB5u2TwGLx6d7xJsgyFVG8KVNJOqpq69uY",
-    authDomain: "trinhd-9ddf5.firebaseapp.com",
-    databaseURL: "https://trinhd-9ddf5-default-rtdb.asia-southeast1.firebasedatabase.app",
-    projectId: "trinhd-9ddf5",
-    storageBucket: "trinhd-9ddf5.firebasestorage.app",
-    messagingSenderId: "83255259757",
-    appId: "1:83255259757:web:aa18ffeba20d2950428564",
-    measurementId: "G-YBHWJ92BDF"
-  };
+        const firebaseConfig = {
+            apiKey: "AIzaSyB5u2TwGLx6d7xJsgyFVG8KVNJOqpq69uY",
+            authDomain: "trinhd-9ddf5.firebaseapp.com",
+            databaseURL: "https://trinhd-9ddf5-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "trinhd-9ddf5",
+            storageBucket: "trinhd-9ddf5.firebasestorage.app",
+            messagingSenderId: "83255259757",
+            appId: "1:83255259757:web:aa18ffeba20d2950428564",
+            measurementId: "G-YBHWJ92BDF"
+        };
 
-  // Initialize Firebase
-  const app = initializeApp(firebaseConfig);
-  const analytics = getAnalytics(app);
+        const app = initializeApp(firebaseConfig);
+        const analytics = getAnalytics(app);
+        const database = getDatabase(app);
 
-        let app, db, auth;
-        let currentUser = null;
-
-        try {
-            app = initializeApp(firebaseConfig);
-            db = getFirestore(app);
-            auth = getAuth(app);
-            
-            // Xử lý Đăng nhập Đám mây
-            const initAuth = async () => {
-                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                    await signInWithCustomToken(auth, __initial_auth_token);
-                } else {
-                    await signInAnonymously(auth);
-                }
-            };
-
-            initAuth().catch(err => console.warn("Lưu ý: Đang chạy ở chế độ Offline / LocalStorage", err));
-
-            onAuthStateChanged(auth, (user) => {
-                if (user) {
-                    currentUser = user;
-                    const statusDot = document.getElementById('cloud-status-dot');
-                    if (statusDot) {
-                        statusDot.className = "inline-block w-2 h-2 rounded-full bg-emerald-500";
-                        statusDot.title = "Đã kết nối Cơ sở dữ liệu Cloud";
-                    }
-                    // Đồng bộ dữ liệu realtime từ Cloud
-                    setupRealtimeSync();
-                }
-            });
-        } catch (e) {
-            console.log("Sử dụng LocalStorage mặc định");
+        const statusDot = document.getElementById('cloud-status-dot');
+        if (statusDot) {
+            statusDot.className = "inline-block w-2 h-2 rounded-full bg-emerald-500";
+            statusDot.title = "Đã kết nối Firebase Realtime Database";
         }
 
-        // Lắng nghe biến đổi dữ liệu vĩnh viễn trên Cloud
         function setupRealtimeSync() {
-            if (!currentUser || !db) return;
+            const productsRef = ref(database, 'kho_hang/products');
+            const historyRef = ref(database, 'kho_hang/history');
 
-            const productsDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'productsData', 'main');
-            const historyDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'historyData', 'main');
-
-            // Đồng bộ Danh mục Sản phẩm
-            onSnapshot(productsDocRef, (docSnap) => {
-                if (docSnap.exists()) {
-                    window.products = docSnap.data().list || [];
+            onValue(productsRef, (snapshot) => {
+                const data = snapshot.val();
+                if (data) {
+                    window.products = data;
                 } else {
-                    // Lưu ban đầu nếu chưa có trên Đám mây
                     saveDataToCloud();
                 }
-                window.updateDashboard();
-                if (!document.getElementById('tab-products').classList.contains('hidden')) window.renderProducts();
-            }, (err) => console.error(err));
-
-            // Đồng bộ Lịch sử Giao dịch
-            onSnapshot(historyDocRef, (docSnap) => {
-                if (docSnap.exists()) {
-                    window.historyData = docSnap.data().list || [];
+                if (typeof window.updateDashboard === 'function') window.updateDashboard();
+                if (!document.getElementById('tab-products').classList.contains('hidden') && typeof window.renderProducts === 'function') {
+                    window.renderProducts();
                 }
-                window.updateDashboard();
-                if (!document.getElementById('tab-history').classList.contains('hidden')) window.renderHistory();
-            }, (err) => console.error(err));
+            });
+
+            onValue(historyRef, (snapshot) => {
+                const data = snapshot.val();
+                if (data) {
+                    window.historyData = data;
+                }
+                if (typeof window.updateDashboard === 'function') window.updateDashboard();
+                if (!document.getElementById('tab-history').classList.contains('hidden') && typeof window.renderHistory === 'function') {
+                    window.renderHistory();
+                }
+            });
         }
 
-        // Hàm Lưu Đám Mây Toàn Cục
         window.saveDataToCloud = async function() {
-            // Lưu LocalStorage dự phòng
             localStorage.setItem('app_products', JSON.stringify(window.products));
             localStorage.setItem('app_history', JSON.stringify(window.historyData));
 
-            // Nếu đã kết nối Firebase Cloud
-            if (currentUser && db) {
-                try {
-                    const productsDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'productsData', 'main');
-                    const historyDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'historyData', 'main');
-
-                    await setDoc(productsDocRef, { list: window.products });
-                    await setDoc(historyDocRef, { list: window.historyData });
-                } catch (err) {
-                    console.error("Lỗi đồng bộ Đám Mây:", err);
-                }
+            try {
+                await set(ref(database, 'kho_hang/products'), window.products);
+                await set(ref(database, 'kho_hang/history'), window.historyData);
+            } catch (err) {
+                console.error("Lỗi khi lưu dữ liệu lên Firebase:", err);
             }
         };
+
+        setupRealtimeSync();
     </script>
 
     <!-- APPLICATION LOGIC JS -->
     <script>
-        // Initial Data Structure Setup
         window.products = JSON.parse(localStorage.getItem('app_products')) || [
             { id: '1', code: 'SP001', name: 'iPhone 15 Pro 128GB', category: 'Điện thoại', importPrice: 22000000, sellPrice: 25990000, stock: 12, minStock: 5 },
             { id: '2', code: 'SP002', name: 'MacBook Air M2', category: 'Laptop', importPrice: 24000000, sellPrice: 27490000, stock: 3, minStock: 5 },
@@ -772,7 +686,6 @@
         let importCart = []; 
         let myChart = null;
 
-        // Save State (Gọi tới hàm lưu Đám Mây)
         function saveData() {
             if (typeof window.saveDataToCloud === 'function') {
                 window.saveDataToCloud();
@@ -783,12 +696,10 @@
             updateDashboard();
         }
 
-        // Format Currency
         function formatVND(amount) {
             return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
         }
 
-        // Navigation Tabs Handling
         function switchTab(tabId) {
             document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
             document.querySelectorAll('.nav-btn').forEach(btn => {
@@ -819,7 +730,6 @@
             if (tabId === 'dashboard') updateDashboard();
         }
 
-        // Toast Notification System
         function showToast(message, type = 'success') {
             const toast = document.getElementById('toast');
             const toastMsg = document.getElementById('toast-msg');
@@ -840,7 +750,6 @@
             }, 3000);
         }
 
-        // Custom Confirmation Dialog Helper
         function showCustomConfirm({ title, message, detail, confirmText = "Xác nhận xóa", btnColor = "rose", onConfirm }) {
             const modal = document.getElementById('confirm-modal');
             const box = document.getElementById('confirm-modal-box');
@@ -860,7 +769,6 @@
                 detailEl.classList.add('hidden');
             }
 
-            // Style Confirm Button dynamically
             btnOk.className = `px-4 py-2 text-xs font-semibold text-white bg-${btnColor}-600 hover:bg-${btnColor}-700 active:scale-95 rounded-xl transition-all shadow-sm flex items-center gap-1.5`;
             btnOk.querySelector('span').innerText = confirmText;
 
@@ -884,7 +792,6 @@
             btnCancel.onclick = closeConfirm;
         }
 
-        // --- DASHBOARD LOGIC ---
         window.updateDashboard = function() {
             const totalProducts = window.products.length;
             const lowStockProducts = window.products.filter(p => p.stock <= p.minStock);
@@ -957,7 +864,6 @@
             });
         }
 
-        // --- PRODUCTS MANAGEMENT ---
         let selectedProductIds = new Set();
 
         window.renderProducts = function() {
@@ -1023,17 +929,6 @@
             } else {
                 selectedProductIds.delete(strId);
             }
-            const selectAllCheckbox = document.getElementById('select-all-products');
-            if (selectAllCheckbox) {
-                const search = document.getElementById('product-search').value.toLowerCase();
-                const category = document.getElementById('product-filter-category').value;
-                const filtered = window.products.filter(p => {
-                    const matchSearch = p.name.toLowerCase().includes(search) || p.code.toLowerCase().includes(search);
-                    const matchCategory = category === '' || p.category === category;
-                    return matchSearch && matchCategory;
-                });
-                selectAllCheckbox.checked = filtered.length > 0 && filtered.every(p => selectedProductIds.has(String(p.id)));
-            }
             updateBulkDeleteButton();
         }
 
@@ -1077,7 +972,6 @@
             showCustomConfirm({
                 title: "Xóa danh sách sản phẩm",
                 message: `Bạn có chắc chắn muốn xóa ${count} sản phẩm đã chọn khỏi hệ thống?`,
-                detail: "Hành động này sẽ không thể khôi phục lại dữ liệu đã xóa.",
                 confirmText: `Xóa (${count}) sản phẩm`,
                 onConfirm: () => {
                     window.products = window.products.filter(p => !selectedProductIds.has(String(p.id)));
@@ -1097,7 +991,6 @@
             showCustomConfirm({
                 title: "Xóa sản phẩm",
                 message: `Bạn có chắc chắn muốn xóa sản phẩm ${prodName}?`,
-                detail: targetProd ? `Mã SP: ${targetProd.code} | Tồn kho: ${targetProd.stock}` : null,
                 confirmText: "Xóa sản phẩm",
                 onConfirm: () => {
                     window.products = window.products.filter(p => String(p.id) !== strId);
@@ -1167,7 +1060,6 @@
             openProductModal(true);
         }
 
-        // --- IMPORT STOCK LOGIC ---
         function populateImportSelect() {
             const select = document.getElementById('import-product-select');
             if (!select) return;
@@ -1238,7 +1130,7 @@
             if (!tbody) return;
 
             if (importCart.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="5" class="text-center py-8 text-slate-400">Chưa có sản phẩm nào trong phiếu nhập. Vui lòng chọn sản phẩm ở trên.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="5" class="text-center py-8 text-slate-400">Chưa có sản phẩm nào trong phiếu nhập.</td></tr>`;
                 document.getElementById('import-count-display').innerText = '0';
                 document.getElementById('import-total-display').innerText = '0 ₫';
                 return;
@@ -1258,14 +1150,12 @@
                             <p class="text-xs text-slate-400">Mã: ${item.code}</p>
                         </td>
                         <td class="p-3 text-center">
-                            <input type="number" min="1" value="${item.qty}" onchange="updateImportItemQty('${item.id}', this.value)" class="w-20 text-center border border-slate-200 rounded p-1 text-xs font-bold text-slate-800 focus:ring-1 focus:ring-emerald-500 outline-none">
+                            <input type="number" min="1" value="${item.qty}" onchange="updateImportItemQty('${item.id}', this.value)" class="w-20 text-center border border-slate-200 rounded p-1 text-xs font-bold text-slate-800 outline-none">
                         </td>
                         <td class="p-3 text-right">
-                            <input type="number" min="0" value="${item.importPrice}" onchange="updateImportItemPrice('${item.id}', this.value)" class="w-28 text-right border border-slate-200 rounded p-1 text-xs font-bold text-slate-800 focus:ring-1 focus:ring-emerald-500 outline-none">
+                            <input type="number" min="0" value="${item.importPrice}" onchange="updateImportItemPrice('${item.id}', this.value)" class="w-28 text-right border border-slate-200 rounded p-1 text-xs font-bold text-slate-800 outline-none">
                         </td>
-                        <td class="p-3 text-right font-bold text-emerald-600">
-                            ${formatVND(subtotal)}
-                        </td>
+                        <td class="p-3 text-right font-bold text-emerald-600">${formatVND(subtotal)}</td>
                         <td class="p-3 text-center">
                             <button onclick="removeImportItem('${item.id}')" class="text-rose-500 hover:text-rose-700 p-1"><i class="fa-solid fa-trash-can"></i></button>
                         </td>
@@ -1328,7 +1218,6 @@
             populateImportSelect();
         }
 
-        // --- EXPORT / POS LOGIC ---
         function renderPosProducts() {
             const search = document.getElementById('pos-search').value.toLowerCase();
             const grid = document.getElementById('pos-product-grid');
@@ -1418,9 +1307,9 @@
                             <p class="text-slate-400">${formatVND(item.price)}</p>
                         </div>
                         <div class="flex items-center gap-1">
-                            <button onclick="updateCartQty('${item.id}', -1)" class="w-6 h-6 rounded bg-slate-100 flex items-center justify-center text-slate-600 hover:bg-slate-200">-</button>
-                            <input type="number" min="1" value="${item.qty}" onchange="setCartQty('${item.id}', this.value)" class="w-12 h-6 text-center border border-slate-200 rounded text-xs font-bold text-slate-800 focus:outline-none focus:ring-1 focus:ring-blue-500">
-                            <button onclick="updateCartQty('${item.id}', 1)" class="w-6 h-6 rounded bg-slate-100 flex items-center justify-center text-slate-600 hover:bg-slate-200">+</button>
+                            <button onclick="updateCartQty('${item.id}', -1)" class="w-6 h-6 rounded bg-slate-100 flex items-center justify-center text-slate-600">-</button>
+                            <input type="number" min="1" value="${item.qty}" onchange="setCartQty('${item.id}', this.value)" class="w-12 h-6 text-center border border-slate-200 rounded text-xs font-bold text-slate-800 outline-none">
+                            <button onclick="updateCartQty('${item.id}', 1)" class="w-6 h-6 rounded bg-slate-100 flex items-center justify-center text-slate-600">+</button>
                         </div>
                     </div>
                 `;
@@ -1492,7 +1381,6 @@
             showToast('Xuất kho & Thanh toán thành công!');
         }
 
-        // --- INVOICE MODAL LOGIC ---
         function openInvoiceModal(order) {
             document.getElementById('inv-code').innerText = order.id;
             document.getElementById('inv-date').innerText = order.date;
@@ -1516,7 +1404,6 @@
             document.getElementById('invoice-modal').classList.add('hidden');
         }
 
-        // --- HISTORY LOGIC ---
         window.renderHistory = function() {
             const filter = document.getElementById('history-type-filter').value;
             const tbody = document.getElementById('history-table-body');
@@ -1603,12 +1490,10 @@
             });
         }
 
-        // --- INITIALIZATION ---
         window.onload = function() {
             updateDashboard();
         };
 
-        // --- EXCEL IMPORT LOGIC ---
         let parsedExcelProducts = [];
 
         function openExcelModal() {
@@ -1656,7 +1541,7 @@
                     parseAndPreviewExcelRows(jsonRows);
                 } catch (err) {
                     console.error(err);
-                    showToast('Đã có lỗi khi đọc file Excel! Vui lòng kiểm tra định dạng file.', 'error');
+                    showToast('Đã có lỗi khi đọc file Excel!', 'error');
                 }
             };
             reader.readAsArrayBuffer(file);
@@ -1699,7 +1584,7 @@
             });
 
             if (parsedExcelProducts.length === 0) {
-                showToast('Không tìm thấy dữ liệu sản phẩm hợp lệ trong file Excel!', 'error');
+                showToast('Không tìm thấy dữ liệu sản phẩm hợp lệ!', 'error');
                 document.getElementById('btn-import-excel').disabled = true;
                 return;
             }
