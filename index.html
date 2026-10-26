@@ -83,7 +83,7 @@
 
         <!-- Footer info -->
         <div class="p-4 border-t border-slate-800 text-xs text-slate-500 flex items-center justify-between">
-            <span>Phiên bản v1.5 (Firebase)</span>
+            <span>Phiên bản v1.6 (Firebase)</span>
             <span id="cloud-status-dot" class="inline-block w-2 h-2 rounded-full bg-amber-500" title="Đang kết nối Firebase..."></span>
         </div>
     </aside>
@@ -195,15 +195,28 @@
                 <div class="flex flex-col sm:flex-row gap-4 items-center justify-between bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
                     <div class="relative w-full sm:w-80">
                         <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
-                        <input type="text" id="product-search" oninput="renderProducts()" placeholder="Tìm theo tên hoặc mã SP..." class="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <input type="text" id="product-search" oninput="onSearchOrFilterChange()" placeholder="Tìm theo tên hoặc mã SP..." class="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
                     </div>
                     <div class="flex flex-wrap items-center gap-3 w-full sm:w-auto justify-end">
                         <button id="btn-delete-selected" onclick="deleteSelectedProducts()" class="hidden bg-rose-600 hover:bg-rose-700 text-white text-sm px-4 py-2 rounded-lg font-medium flex items-center gap-2 whitespace-nowrap transition-all shadow-sm">
                             <i class="fa-solid fa-trash-can"></i> Xóa sản phẩm đã chọn (<span id="selected-count">0</span>)
                         </button>
-                        <select id="product-filter-category" onchange="renderProducts()" class="bg-slate-50 border border-slate-200 text-sm rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
-                            <option value="">Tất cả danh mục</option>
-                        </select>
+
+                        <!-- BỘ LỌC DANH MỤC CHECKBOX ĐA CHỌN -->
+                        <div class="relative inline-block text-left" id="category-filter-dropdown-container">
+                            <button type="button" onclick="toggleCategoryFilterMenu()" id="category-filter-btn" class="bg-slate-50 border border-slate-200 text-sm rounded-lg px-3 py-2 flex items-center justify-between gap-2 focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-700 min-w-[170px]">
+                                <span id="category-filter-label" class="truncate font-medium">Tất cả danh mục</span>
+                                <i class="fa-solid fa-chevron-down text-xs text-slate-400"></i>
+                            </button>
+
+                            <div id="category-filter-menu" class="hidden absolute right-0 mt-2 w-56 rounded-xl bg-white shadow-xl border border-slate-200 z-30 p-2 space-y-1 max-h-64 overflow-y-auto">
+                                <label class="flex items-center gap-2 px-3 py-1.5 hover:bg-slate-50 rounded-lg cursor-pointer text-xs font-bold border-b border-slate-100 text-blue-600 pb-2 mb-1">
+                                    <input type="checkbox" id="cat-checkbox-all" onchange="toggleSelectAllCategoryFilter(this.checked)" checked class="w-4 h-4 text-blue-600 rounded border-slate-300 focus:ring-blue-500 cursor-pointer">
+                                    <span>Tất cả danh mục</span>
+                                </label>
+                                <div id="category-checkboxes-list" class="space-y-0.5"></div>
+                            </div>
+                        </div>
 
                         <button onclick="exportStockToExcel()" class="bg-emerald-600 hover:bg-emerald-700 text-white text-sm px-4 py-2 rounded-lg font-medium flex items-center gap-2 whitespace-nowrap transition-all shadow-sm" title="Tải báo cáo hàng tồn về máy dưới dạng Excel">
                             <i class="fa-solid fa-file-arrow-down"></i> Xuất Excel Tồn Kho
@@ -218,7 +231,7 @@
                     </div>
                 </div>
 
-                <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+                <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden flex flex-col justify-between">
                     <div class="overflow-x-auto">
                         <table class="w-full text-left text-sm text-slate-600">
                             <thead class="bg-slate-50 text-slate-700 uppercase text-xs border-b border-slate-200 font-semibold">
@@ -238,10 +251,16 @@
                             <tbody id="products-table-body" class="divide-y divide-slate-200"></tbody>
                         </table>
                     </div>
+
+                    <!-- THANH PHÂN TRANG (PAGINATION 20 DÒNG/TRANG) -->
+                    <div class="p-4 bg-slate-50 border-t border-slate-200 flex flex-col sm:flex-row justify-between items-center gap-4 text-xs text-slate-500">
+                        <div id="pagination-info" class="font-medium">Hiển thị 0 - 0 trên tổng số 0 sản phẩm</div>
+                        <div id="pagination-controls" class="flex items-center space-x-1"></div>
+                    </div>
                 </div>
             </section>
 
-            <!-- TAB 3: CATEGORIES MANAGEMENT (NEW) -->
+            <!-- TAB 3: CATEGORIES MANAGEMENT -->
             <section id="tab-categories" class="tab-content hidden space-y-6">
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     <!-- Form Thêm Danh Mục -->
@@ -713,6 +732,11 @@
         let selectedImportProduct = null;
         let myChart = null;
 
+        // BIẾN QUẢN LÝ LỌC CATEGORY VÀ PHÂN TRANG (20 DÒNG/TRANG)
+        let selectedCategoriesFilter = []; // Trống = Chọn tất cả
+        let currentPage = 1;
+        const pageSize = 20;
+
         function saveData() {
             if (typeof window.saveDataToCloud === 'function') {
                 window.saveDataToCloud();
@@ -801,23 +825,234 @@
             document.getElementById('confirm-btn-cancel').onclick = closeConfirm;
         }
 
-        // --- CẬP NHẬT ĐỔI DROPDOWN DANH MỤC TỰ ĐỘNG ---
+        // --- XỬ LÝ DROPDOWN LỌC DANH MỤC ĐA CHỌN (CHECKBOX) ---
+        function toggleCategoryFilterMenu() {
+            const menu = document.getElementById('category-filter-menu');
+            if (menu) menu.classList.toggle('hidden');
+        }
+
+        document.addEventListener('click', function(e) {
+            const container = document.getElementById('category-filter-dropdown-container');
+            const menu = document.getElementById('category-filter-menu');
+            if (container && menu && !container.contains(e.target)) {
+                menu.classList.add('hidden');
+            }
+        });
+
         window.updateCategoryDropdowns = function() {
-            const filterSelect = document.getElementById('product-filter-category');
-            if (filterSelect) {
-                const currentVal = filterSelect.value;
-                filterSelect.innerHTML = '<option value="">Tất cả danh mục</option>' +
-                    window.categories.map(cat => `<option value="${cat}">${cat}</option>`).join('');
-                filterSelect.value = currentVal;
+            // 1. Dựng danh sách Checkbox trong bộ lọc sản phẩm
+            const checkboxesList = document.getElementById('category-checkboxes-list');
+            if (checkboxesList) {
+                checkboxesList.innerHTML = window.categories.map(cat => {
+                    const safeCat = cat.replace(/"/g, '&quot;');
+                    const isChecked = selectedCategoriesFilter.length === 0 || selectedCategoriesFilter.includes(cat);
+                    return `
+                        <label class="flex items-center gap-2 px-3 py-1.5 hover:bg-slate-50 rounded-lg cursor-pointer text-xs text-slate-700">
+                            <input type="checkbox" value="${safeCat}" onchange="onCategoryCheckboxChange()" ${isChecked ? 'checked' : ''} class="cat-filter-checkbox w-4 h-4 text-blue-600 rounded border-slate-300 focus:ring-blue-500 cursor-pointer">
+                            <span class="truncate">${cat}</span>
+                        </label>
+                    `;
+                }).join('');
             }
 
+            // 2. Cập nhật ô Chọn danh mục ở Modal Thêm/Sửa sản phẩm
             const prodCategorySelect = document.getElementById('prod-category');
             if (prodCategorySelect) {
                 const currentVal = prodCategorySelect.value;
                 prodCategorySelect.innerHTML = window.categories.map(cat => `<option value="${cat}">${cat}</option>`).join('');
                 if (currentVal) prodCategorySelect.value = currentVal;
             }
+
+            updateCategoryFilterLabel();
         };
+
+        function toggleSelectAllCategoryFilter(isAllChecked) {
+            const checkboxes = document.querySelectorAll('.cat-filter-checkbox');
+            checkboxes.forEach(cb => cb.checked = isAllChecked);
+
+            if (isAllChecked) {
+                selectedCategoriesFilter = [];
+            } else {
+                selectedCategoriesFilter = ['__NONE__']; // Không chọn danh mục nào
+            }
+
+            updateCategoryFilterLabel();
+            onSearchOrFilterChange();
+        }
+
+        function onCategoryCheckboxChange() {
+            const checkboxes = document.querySelectorAll('.cat-filter-checkbox');
+            const checkedBoxes = Array.from(checkboxes).filter(cb => cb.checked);
+            const allCheckbox = document.getElementById('cat-checkbox-all');
+
+            if (checkedBoxes.length === checkboxes.length) {
+                selectedCategoriesFilter = [];
+                if (allCheckbox) allCheckbox.checked = true;
+            } else {
+                selectedCategoriesFilter = checkedBoxes.map(cb => cb.value);
+                if (allCheckbox) allCheckbox.checked = false;
+            }
+
+            updateCategoryFilterLabel();
+            onSearchOrFilterChange();
+        }
+
+        function updateCategoryFilterLabel() {
+            const label = document.getElementById('category-filter-label');
+            const allCheckbox = document.getElementById('cat-checkbox-all');
+            if (!label) return;
+
+            const total = window.categories.length;
+            const count = selectedCategoriesFilter.length;
+
+            if (count === 0 || count === total) {
+                label.innerText = 'Tất cả danh mục';
+                if (allCheckbox) allCheckbox.checked = true;
+            } else if (count === 1 && selectedCategoriesFilter[0] !== '__NONE__') {
+                label.innerText = selectedCategoriesFilter[0];
+                if (allCheckbox) allCheckbox.checked = false;
+            } else if (selectedCategoriesFilter.includes('__NONE__') || count === 0) {
+                label.innerText = 'Chưa chọn danh mục';
+                if (allCheckbox) allCheckbox.checked = false;
+            } else {
+                label.innerText = `Đã chọn (${count}) danh mục`;
+                if (allCheckbox) allCheckbox.checked = false;
+            }
+        }
+
+        function onSearchOrFilterChange() {
+            currentPage = 1; // Reset về trang 1 khi tìm kiếm hoặc lọc
+            renderProducts();
+        }
+
+        // --- HÀM RENDER SẢN PHẨM & PHÂN TRANG (20 DÒNG/TRANG) ---
+        let selectedProductIds = new Set();
+
+        window.renderProducts = function() {
+            const search = document.getElementById('product-search').value.toLowerCase();
+            const tbody = document.getElementById('products-table-body');
+            if (!tbody) return;
+
+            // 1. Lọc sản phẩm theo từ khóa & theo mảng category đã chọn
+            const filtered = window.products.filter(p => {
+                const matchSearch = p.name.toLowerCase().includes(search) || p.code.toLowerCase().includes(search);
+                
+                let matchCategory = true;
+                if (selectedCategoriesFilter.length > 0) {
+                    if (selectedCategoriesFilter.includes('__NONE__')) {
+                        matchCategory = false;
+                    } else {
+                        matchCategory = selectedCategoriesFilter.includes(p.category);
+                    }
+                }
+                return matchSearch && matchCategory;
+            });
+
+            // 2. Tính toán phân trang (20 dòng / trang)
+            const totalRecords = filtered.length;
+            const totalPages = Math.ceil(totalRecords / pageSize) || 1;
+            if (currentPage > totalPages) currentPage = totalPages;
+            if (currentPage < 1) currentPage = 1;
+
+            const startIndex = (currentPage - 1) * pageSize;
+            const endIndex = Math.min(startIndex + pageSize, totalRecords);
+            const pageData = filtered.slice(startIndex, endIndex);
+
+            // 3. Render dữ liệu bảng
+            if (pageData.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="8" class="text-center py-6 text-slate-400">Không tìm thấy sản phẩm nào phù hợp</td></tr>`;
+            } else {
+                tbody.innerHTML = pageData.map(p => `
+                    <tr class="hover:bg-slate-50 transition-colors">
+                        <td class="px-4 py-4 text-center">
+                            <input type="checkbox" value="${p.id}" ${selectedProductIds.has(String(p.id)) ? 'checked' : ''} onchange="toggleSelectProduct('${p.id}', this.checked)" class="w-4 h-4 rounded cursor-pointer">
+                        </td>
+                        <td class="px-6 py-4 font-semibold text-slate-900">${p.code}</td>
+                        <td class="px-6 py-4 font-medium">${p.name}</td>
+                        <td class="px-6 py-4"><span class="px-2.5 py-1 text-xs rounded-full bg-slate-100 text-slate-600 font-medium">${p.category}</span></td>
+                        <td class="px-6 py-4 text-right">${formatVND(p.importPrice)}</td>
+                        <td class="px-6 py-4 text-right font-medium text-slate-800">${formatVND(p.sellPrice)}</td>
+                        <td class="px-6 py-4 text-center">
+                            <span class="px-2.5 py-1 text-xs rounded-full font-bold ${p.stock <= p.minStock ? 'bg-rose-100 text-rose-700' : 'bg-emerald-100 text-emerald-700'}">${p.stock}</span>
+                        </td>
+                        <td class="px-6 py-4 text-center space-x-2">
+                            <button onclick="editProduct('${p.id}')" class="text-blue-600 hover:text-blue-800"><i class="fa-solid fa-pen-to-square"></i></button>
+                            <button onclick="deleteProduct('${p.id}')" class="text-rose-500 hover:text-rose-700"><i class="fa-solid fa-trash"></i></button>
+                        </td>
+                    </tr>
+                `).join('');
+            }
+
+            // 4. Cập nhật nút xóa nhiều
+            const selectAllCheckbox = document.getElementById('select-all-products');
+            if (selectAllCheckbox) {
+                selectAllCheckbox.checked = pageData.length > 0 && pageData.every(p => selectedProductIds.has(String(p.id)));
+            }
+
+            // 5. Render giao diện phân trang
+            renderPaginationControls(totalRecords, totalPages, startIndex, endIndex);
+        };
+
+        function renderPaginationControls(totalRecords, totalPages, startIndex, endIndex) {
+            const infoEl = document.getElementById('pagination-info');
+            const controlsEl = document.getElementById('pagination-controls');
+
+            if (!infoEl || !controlsEl) return;
+
+            if (totalRecords === 0) {
+                infoEl.innerText = "Hiển thị 0 - 0 trên tổng số 0 sản phẩm";
+                controlsEl.innerHTML = '';
+                return;
+            }
+
+            infoEl.innerText = `Hiển thị ${startIndex + 1} - ${endIndex} trên tổng số ${totalRecords} sản phẩm`;
+
+            let html = '';
+
+            // Nút Về trang đầu & Trang trước
+            html += `
+                <button onclick="goToPage(1)" ${currentPage === 1 ? 'disabled' : ''} class="px-2.5 py-1 rounded border border-slate-200 bg-white hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed">
+                    <i class="fa-solid fa-angles-left"></i>
+                </button>
+                <button onclick="goToPage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''} class="px-2.5 py-1 rounded border border-slate-200 bg-white hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed">
+                    <i class="fa-solid fa-chevron-left"></i>
+                </button>
+            `;
+
+            // Nút hiển thị danh sách số trang
+            const maxVisiblePages = 5;
+            let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
+            let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+
+            if (endPage - startPage + 1 < maxVisiblePages) {
+                startPage = Math.max(1, endPage - maxVisiblePages + 1);
+            }
+
+            for (let i = startPage; i <= endPage; i++) {
+                html += `
+                    <button onclick="goToPage(${i})" class="px-3 py-1 rounded font-semibold border ${i === currentPage ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-100'}">
+                        ${i}
+                    </button>
+                `;
+            }
+
+            // Nút Trang tiếp & Đến trang cuối
+            html += `
+                <button onclick="goToPage(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''} class="px-2.5 py-1 rounded border border-slate-200 bg-white hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed">
+                    <i class="fa-solid fa-chevron-right"></i>
+                </button>
+                <button onclick="goToPage(${totalPages})" ${currentPage === totalPages ? 'disabled' : ''} class="px-2.5 py-1 rounded border border-slate-200 bg-white hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed">
+                    <i class="fa-solid fa-angles-right"></i>
+                </button>
+            `;
+
+            controlsEl.innerHTML = html;
+        }
+
+        function goToPage(page) {
+            currentPage = page;
+            renderProducts();
+        }
 
         // --- QUẢN LÝ DANH MỤC LOGIC ---
         window.renderCategories = function() {
@@ -883,6 +1118,7 @@
                 confirmText: "Xóa danh mục",
                 onConfirm: () => {
                     window.categories = window.categories.filter(c => c !== catName);
+                    selectedCategoriesFilter = selectedCategoriesFilter.filter(c => c !== catName);
                     saveData();
                     renderCategories();
                     updateCategoryDropdowns();
@@ -946,37 +1182,30 @@
             showToast('Đã xuất Excel thành công!');
         }
 
-        let selectedProductIds = new Set();
-        window.renderProducts = function() {
-            const search = document.getElementById('product-search').value.toLowerCase();
-            const category = document.getElementById('product-filter-category').value;
-            const tbody = document.getElementById('products-table-body');
-            if (!tbody) return;
-
-            const filtered = window.products.filter(p => (p.name.toLowerCase().includes(search) || p.code.toLowerCase().includes(search)) && (category === '' || p.category === category));
-
-            tbody.innerHTML = filtered.length === 0 ? `<tr><td colspan="8" class="text-center py-6 text-slate-400">Không tìm thấy sản phẩm</td></tr>` : filtered.map(p => `
-                <tr class="hover:bg-slate-50">
-                    <td class="px-4 py-4 text-center"><input type="checkbox" value="${p.id}" onchange="toggleSelectProduct('${p.id}', this.checked)" class="w-4 h-4 rounded cursor-pointer"></td>
-                    <td class="px-6 py-4 font-semibold text-slate-900">${p.code}</td>
-                    <td class="px-6 py-4 font-medium">${p.name}</td>
-                    <td class="px-6 py-4"><span class="px-2.5 py-1 text-xs rounded-full bg-slate-100 text-slate-600 font-medium">${p.category}</span></td>
-                    <td class="px-6 py-4 text-right">${formatVND(p.importPrice)}</td>
-                    <td class="px-6 py-4 text-right font-medium text-slate-800">${formatVND(p.sellPrice)}</td>
-                    <td class="px-6 py-4 text-center"><span class="px-2.5 py-1 text-xs rounded-full font-bold ${p.stock <= p.minStock ? 'bg-rose-100 text-rose-700' : 'bg-emerald-100 text-emerald-700'}">${p.stock}</span></td>
-                    <td class="px-6 py-4 text-center space-x-2">
-                        <button onclick="editProduct('${p.id}')" class="text-blue-600 hover:text-blue-800"><i class="fa-solid fa-pen-to-square"></i></button>
-                        <button onclick="deleteProduct('${p.id}')" class="text-rose-500 hover:text-rose-700"><i class="fa-solid fa-trash"></i></button>
-                    </td>
-                </tr>
-            `).join('');
-        };
-
         function toggleSelectProduct(id, isChecked) {
             isChecked ? selectedProductIds.add(String(id)) : selectedProductIds.delete(String(id));
             const btn = document.getElementById('btn-delete-selected');
             btn.classList.toggle('hidden', selectedProductIds.size === 0);
             document.getElementById('selected-count').innerText = selectedProductIds.size;
+        }
+
+        function toggleSelectAllProducts(masterCheckbox) {
+            const search = document.getElementById('product-search').value.toLowerCase();
+            const filtered = window.products.filter(p => {
+                const matchSearch = p.name.toLowerCase().includes(search) || p.code.toLowerCase().includes(search);
+                let matchCategory = true;
+                if (selectedCategoriesFilter.length > 0) {
+                    matchCategory = !selectedCategoriesFilter.includes('__NONE__') && selectedCategoriesFilter.includes(p.category);
+                }
+                return matchSearch && matchCategory;
+            });
+
+            if (masterCheckbox.checked) {
+                filtered.forEach(p => selectedProductIds.add(String(p.id)));
+            } else {
+                filtered.forEach(p => selectedProductIds.delete(String(p.id)));
+            }
+            renderProducts();
         }
 
         function deleteSelectedProducts() {
