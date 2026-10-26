@@ -610,75 +610,88 @@
     </div>
 
     <!-- FIREBASE REALTIME DATABASE SCRIPT -->
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/13.1.0/firebase-app.js";
-        import { getAnalytics } from "https://www.gstatic.com/firebasejs/13.1.0/firebase-analytics.js";
-        import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/13.1.0/firebase-database.js";
+  <!-- FIREBASE REALTIME DATABASE SCRIPT -->
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/13.1.0/firebase-app.js";
+    import { getAnalytics } from "https://www.gstatic.com/firebasejs/13.1.0/firebase-analytics.js";
+    import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/13.1.0/firebase-database.js";
 
-        const firebaseConfig = {
-            apiKey: "AIzaSyB5u2TwGLx6d7xJsgyFVG8KVNJOqpq69uY",
-            authDomain: "trinhd-9ddf5.firebaseapp.com",
-            databaseURL: "https://trinhd-9ddf5-default-rtdb.asia-southeast1.firebasedatabase.app",
-            projectId: "trinhd-9ddf5",
-            storageBucket: "trinhd-9ddf5.firebasestorage.app",
-            messagingSenderId: "83255259757",
-            appId: "1:83255259757:web:aa18ffeba20d2950428564",
-            measurementId: "G-YBHWJ92BDF"
-        };
+    const firebaseConfig = {
+        apiKey: "AIzaSyB5u2TwGLx6d7xJsgyFVG8KVNJOqpq69uY",
+        authDomain: "trinhd-9ddf5.firebaseapp.com",
+        databaseURL: "https://trinhd-9ddf5-default-rtdb.asia-southeast1.firebasedatabase.app",
+        projectId: "trinhd-9ddf5",
+        storageBucket: "trinhd-9ddf5.firebasestorage.app",
+        messagingSenderId: "83255259757",
+        appId: "1:83255259757:web:aa18ffeba20d2950428564",
+        measurementId: "G-YBHWJ92BDF"
+    };
 
-        const app = initializeApp(firebaseConfig);
-        const analytics = getAnalytics(app);
-        const database = getDatabase(app);
+    const app = initializeApp(firebaseConfig);
+    const analytics = getAnalytics(app);
+    const database = getDatabase(app);
 
-        const statusDot = document.getElementById('cloud-status-dot');
-        if (statusDot) {
-            statusDot.className = "inline-block w-2 h-2 rounded-full bg-emerald-500";
-            statusDot.title = "Đã kết nối Firebase Realtime Database";
-        }
+    const statusDot = document.getElementById('cloud-status-dot');
+    if (statusDot) {
+        statusDot.className = "inline-block w-2 h-2 rounded-full bg-emerald-500";
+        statusDot.title = "Đã kết nối Firebase Realtime Database";
+    }
 
-        function setupRealtimeSync() {
-            const productsRef = ref(database, 'kho_hang/products');
-            const historyRef = ref(database, 'kho_hang/history');
+    function setupRealtimeSync() {
+        const productsRef = ref(database, 'kho_hang/products');
+        const historyRef = ref(database, 'kho_hang/history');
 
-            onValue(productsRef, (snapshot) => {
-                const data = snapshot.val();
-                if (data) {
-                    window.products = data;
-                } else {
-                    saveDataToCloud();
+        // Đồng bộ danh mục sản phẩm từ Firebase
+        onValue(productsRef, (snapshot) => {
+            const data = snapshot.val();
+            if (data) {
+                // CHUYỂN ĐỔI: Nếu Firebase trả về Object thì đổi thành Mảng (Array), lọc bỏ các phần tử rỗng
+                if (Array.isArray(data)) {
+                    window.products = data.filter(item => item !== null && item !== undefined);
+                } else if (typeof data === 'object') {
+                    window.products = Object.values(data).filter(item => item !== null && item !== undefined);
                 }
-                if (typeof window.updateDashboard === 'function') window.updateDashboard();
-                if (!document.getElementById('tab-products').classList.contains('hidden') && typeof window.renderProducts === 'function') {
-                    window.renderProducts();
-                }
-            });
-
-            onValue(historyRef, (snapshot) => {
-                const data = snapshot.val();
-                if (data) {
-                    window.historyData = data;
-                }
-                if (typeof window.updateDashboard === 'function') window.updateDashboard();
-                if (!document.getElementById('tab-history').classList.contains('hidden') && typeof window.renderHistory === 'function') {
-                    window.renderHistory();
-                }
-            });
-        }
-
-        window.saveDataToCloud = async function() {
-            localStorage.setItem('app_products', JSON.stringify(window.products));
-            localStorage.setItem('app_history', JSON.stringify(window.historyData));
-
-            try {
-                await set(ref(database, 'kho_hang/products'), window.products);
-                await set(ref(database, 'kho_hang/history'), window.historyData);
-            } catch (err) {
-                console.error("Lỗi khi lưu dữ liệu lên Firebase:", err);
+            } else {
+                saveDataToCloud();
             }
-        };
+            
+            // Render lại toàn bộ giao diện sau khi tải dữ liệu thành công từ Firebase
+            if (typeof window.updateDashboard === 'function') window.updateDashboard();
+            if (typeof window.renderProducts === 'function') window.renderProducts();
+            if (typeof window.renderPosProducts === 'function') window.renderPosProducts();
+        });
 
-        setupRealtimeSync();
-    </script>
+        // Đồng bộ lịch sử giao dịch
+        onValue(historyRef, (snapshot) => {
+            const data = snapshot.val();
+            if (data) {
+                if (Array.isArray(data)) {
+                    window.historyData = data.filter(item => item !== null && item !== undefined);
+                } else if (typeof data === 'object') {
+                    window.historyData = Object.values(data).filter(item => item !== null && item !== undefined);
+                }
+            }
+            if (typeof window.updateDashboard === 'function') window.updateDashboard();
+            if (!document.getElementById('tab-history').classList.contains('hidden') && typeof window.renderHistory === 'function') {
+                window.renderHistory();
+            }
+        });
+    }
+
+    window.saveDataToCloud = async function() {
+        localStorage.setItem('app_products', JSON.stringify(window.products));
+        localStorage.setItem('app_history', JSON.stringify(window.historyData));
+
+        try {
+            await set(ref(database, 'kho_hang/products'), window.products);
+            await set(ref(database, 'kho_hang/history'), window.historyData);
+        } catch (err) {
+            console.error("Lỗi khi lưu dữ liệu lên Firebase:", err);
+        }
+    };
+
+    setupRealtimeSync();
+</script>
 
     <!-- APPLICATION LOGIC JS -->
     <script>
