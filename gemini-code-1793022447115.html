@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hệ Thống Quản Lý Bán Hàng & Kho Hàng</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- SheetJS (xlsx) Library for Excel Import/Export -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+        @media print {
+            .no-print {
+                display: none !important;
+            }
+            .print-only {
+                display: block !important;
+            }
+        }
+    </style>
+</head>
+<body class="bg-slate-100 text-slate-800 flex h-screen overflow-hidden">
+
+    <!-- SIDEBAR -->
+    <aside class="w-64 bg-slate-900 text-white flex flex-col justify-between hidden md:flex shrink-0">
+        <div>
+            <!-- Logo -->
+            <div class="h-16 flex items-center px-6 bg-slate-950 font-bold text-xl text-blue-400 gap-3 border-b border-slate-800">
+                <i class="fa-solid fa-boxes-stacked text-2xl"></i>
+                <span>KHO & BÁN HÀNG</span>
+            </div>
+
+            <!-- Navigation Links -->
+            <nav class="mt-6 px-4 space-y-1">
+                <button onclick="switchTab('dashboard')" id="nav-dashboard" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all bg-blue-600 text-white">
+                    <i class="fa-solid fa-chart-pie w-5 text-center"></i>
+                    <span>Tổng quan</span>
+                </button>
+                <button onclick="switchTab('products')" id="nav-products" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-slate-400 hover:bg-slate-800 hover:text-white transition-all">
+                    <i class="fa-solid fa-box w-5 text-center"></i>
+                    <span>Danh mục Sản phẩm</span>
+                </button>
+                <button onclick="switchTab('import')" id="nav-import" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-slate-400 hover:bg-slate-800 hover:text-white transition-all">
+                    <i class="fa-solid fa-arrow-down-to-bracket w-5 text-center text-emerald-400"></i>
+                    <span>Nhập kho</span>
+                </button>
+                <button onclick="switchTab('export')" id="nav-export" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-slate-400 hover:bg-slate-800 hover:text-white transition-all">
+                    <i class="fa-solid fa-cart-shopping w-5 text-center text-amber-400"></i>
+                    <span>Bán hàng (Xuất kho)</span>
+                </button>
+                <button onclick="switchTab('history')" id="nav-history" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-slate-400 hover:bg-slate-800 hover:text-white transition-all">
+                    <i class="fa-solid fa-clock-rotate-left w-5 text-center"></i>
+                    <span>Lịch sử Giao dịch</span>
+                </button>
+            </nav>
+        </div>
+
+        <!-- User / Footer info -->
+        <div class="p-4 border-t border-slate-800 text-xs text-slate-500 flex items-center justify-between">
+            <span>Phiên bản v1.3 (Cloud)</span>
+            <span id="cloud-status-dot" class="inline-block w-2 h-2 rounded-full bg-amber-500" title="Đang kết nối Đám mây..."></span>
+        </div>
+    </aside>
+
+    <!-- MAIN CONTENT AREA -->
+    <div class="flex-1 flex flex-col h-full overflow-hidden">
+        
+        <!-- HEADER -->
+        <header class="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-6 shrink-0">
+            <div class="flex items-center gap-4">
+                <!-- Mobile Menu Button -->
+                <button id="mobile-menu-btn" class="md:hidden text-slate-600 hover:text-slate-900 focus:outline-none">
+                    <i class="fa-solid fa-bars text-xl"></i>
+                </button>
+                <h1 id="page-title" class="text-xl font-bold text-slate-800">Tổng quan</h1>
+            </div>
+
+            <!-- Header Quick Actions & Profile -->
+            <div class="flex items-center gap-4">
+                <button onclick="switchTab('export')" class="bg-blue-600 hover:bg-blue-700 text-white text-sm px-4 py-2 rounded-lg font-medium flex items-center gap-2 shadow-sm transition-all">
+                    <i class="fa-solid fa-plus"></i>
+                    <span class="hidden sm:inline">Tạo Đơn Mới</span>
+                </button>
+                <div class="h-8 w-px bg-slate-200"></div>
+                <div class="flex items-center gap-3">
+                    <img src="https://placehold.co/100x100/3b82f6/ffffff?text=NV" class="w-9 h-9 rounded-full border border-slate-200" alt="Avatar">
+                    <div class="hidden sm:block">
+                        <p class="text-sm font-semibold leading-none">Quản trị viên</p>
+                        <p class="text-xs text-slate-500 mt-1">Cửa hàng chính</p>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- MAIN BODY CONTAINER -->
+        <main class="flex-1 overflow-y-auto p-4 md:p-6 bg-slate-50">
+
+            <!-- TAB 1: DASHBOARD -->
+            <section id="tab-dashboard" class="tab-content space-y-6">
+                <!-- Stat Cards -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
+                        <div>
+                            <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Tổng Doanh Thu</p>
+                            <h3 id="dash-revenue" class="text-2xl font-bold text-slate-900 mt-1">0 ₫</h3>
+                            <p class="text-xs text-emerald-600 mt-2 font-medium"><i class="fa-solid fa-arrow-trend-up"></i> Từ các đơn bán</p>
+                        </div>
+                        <div class="w-12 h-12 bg-emerald-50 rounded-lg flex items-center justify-center text-emerald-600 text-xl">
+                            <i class="fa-solid fa-sack-dollar"></i>
+                        </div>
+                    </div>
+
+                    <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
+                        <div>
+                            <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Tổng Sản Phẩm</p>
+                            <h3 id="dash-total-products" class="text-2xl font-bold text-slate-900 mt-1">0</h3>
+                            <p class="text-xs text-slate-500 mt-2">Loại mặt hàng</p>
+                        </div>
+                        <div class="w-12 h-12 bg-blue-50 rounded-lg flex items-center justify-center text-blue-600 text-xl">
+                            <i class="fa-solid fa-boxes-packing"></i>
+                        </div>
+                    </div>
+
+                    <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
+                        <div>
+                            <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Cảnh Báo Hết Hàng</p>
+                            <h3 id="dash-low-stock" class="text-2xl font-bold text-rose-600 mt-1">0</h3>
+                            <p class="text-xs text-rose-500 mt-2 font-medium">Tồn kho dưới ngưỡng</p>
+                        </div>
+                        <div class="w-12 h-12 bg-rose-50 rounded-lg flex items-center justify-center text-rose-600 text-xl">
+                            <i class="fa-solid fa-triangle-exclamation"></i>
+                        </div>
+                    </div>
+
+                    <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
+                        <div>
+                            <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Tổng Đơn Bán</p>
+                            <h3 id="dash-total-orders" class="text-2xl font-bold text-slate-900 mt-1">0</h3>
+                            <p class="text-xs text-slate-500 mt-2">Lượt xuất hàng</p>
+                        </div>
+                        <div class="w-12 h-12 bg-purple-50 rounded-lg flex items-center justify-center text-purple-600 text-xl">
+                            <i class="fa-solid fa-receipt"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Charts & Low Stock Warning Table -->
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <!-- Chart -->
+                    <div class="lg:col-span-2 bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+                        <div class="flex items-center justify-between mb-4">
+                            <h2 class="font-bold text-slate-800">Biểu Đồ Xuất/Nhập Kho</h2>
+                            <span class="text-xs text-slate-500">Hoạt động gần nhất</span>
+                        </div>
+                        <div class="h-64 relative">
+                            <canvas id="inventoryChart"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Low Stock Alert List -->
+                    <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col">
+                        <div class="flex items-center justify-between mb-4">
+                            <h2 class="font-bold text-slate-800 text-rose-600 flex items-center gap-2">
+                                <i class="fa-solid fa-bell"></i> Sắp Hết Hàng
+                            </h2>
+                            <span class="text-xs bg-rose-100 text-rose-700 px-2 py-0.5 rounded-full font-medium" id="low-stock-badge">0</span>
+                        </div>
+                        <div class="flex-1 overflow-y-auto max-h-64 divide-y divide-slate-100" id="low-stock-list">
+                            <!-- JS Inject Low Stock -->
+                        </div>
+                    </div>
+                </div>
