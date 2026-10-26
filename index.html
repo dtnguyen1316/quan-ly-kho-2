@@ -10,7 +10,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <!-- Chart.js DataLabels Plugin (Hiển thị giá trị trên biểu đồ) -->
+    <!-- Chart.js DataLabels Plugin -->
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
     <!-- SheetJS (xlsx) Library for Excel Import/Export -->
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
@@ -85,7 +85,7 @@
 
         <!-- Footer info -->
         <div class="p-4 border-t border-slate-800 text-xs text-slate-500 flex items-center justify-between">
-            <span>Phiên bản v1.7 (Firebase)</span>
+            <span>Phiên bản v1.8 (Firebase)</span>
             <span id="cloud-status-dot" class="inline-block w-2 h-2 rounded-full bg-amber-500" title="Đang kết nối Firebase..."></span>
         </div>
     </aside>
@@ -170,20 +170,57 @@
                 </div>
 
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    <!-- KHU VỰC BIỂU ĐỒ TỒN KHO -->
-                    <div class="lg:col-span-2 bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between">
-                        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 gap-2">
+                    <!-- KHU VỰC BIỂU ĐỒ TỒN KHO VỚI BỘ LỌC TÙY CHỌN -->
+                    <div class="lg:col-span-2 bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between space-y-4">
+                        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b pb-3">
                             <div>
-                                <h2 class="font-bold text-slate-800">Biểu Đồ Tồn Kho Theo Tên Sản Phẩm</h2>
-                                <span id="chart-subtitle" class="text-xs text-slate-500">Đang hiển thị theo các danh mục được chọn</span>
+                                <h2 class="font-bold text-slate-800">Biểu Đồ Tồn Kho Theo Tên Sản Phẩm & Danh Mục</h2>
+                                <span id="chart-subtitle" class="text-xs text-slate-500">Tùy chọn hiển thị theo danh mục hoặc sản phẩm cụ thể</span>
                             </div>
-                            
-                            <!-- NÚT TẢI BIỂU ĐỒ RA FILE ẢNH PNG -->
-                            <button onclick="exportChartToImage()" class="bg-blue-50 hover:bg-blue-100 text-blue-600 border border-blue-200 text-xs px-3 py-2 rounded-lg font-semibold flex items-center gap-1.5 transition-all shadow-sm">
-                                <i class="fa-solid fa-image"></i> Tải Biểu Đồ (PNG)
-                            </button>
+
+                            <div class="flex items-center gap-2">
+                                <!-- DROPDOWN CHỌN DANH MỤC CHO BIỂU ĐỒ -->
+                                <div class="relative inline-block text-left" id="chart-cat-dropdown-container">
+                                    <button type="button" onclick="toggleChartCatMenu()" id="chart-cat-btn" class="bg-slate-50 border border-slate-200 text-xs rounded-lg px-3 py-2 flex items-center gap-2 font-medium text-slate-700">
+                                        <i class="fa-solid fa-filter text-blue-600"></i>
+                                        <span id="chart-cat-label">Lọc Danh Mục Biểu Đồ</span>
+                                        <i class="fa-solid fa-chevron-down text-[10px]"></i>
+                                    </button>
+                                    <div id="chart-cat-menu" class="hidden absolute right-0 mt-2 w-52 rounded-xl bg-white shadow-xl border border-slate-200 z-30 p-2 space-y-1 max-h-56 overflow-y-auto">
+                                        <label class="flex items-center gap-2 px-2 py-1.5 hover:bg-slate-50 rounded text-xs font-bold border-b text-blue-600 pb-1.5 mb-1">
+                                            <input type="checkbox" id="chart-cat-all" onchange="toggleSelectAllChartCat(this.checked)" checked class="w-4 h-4 text-blue-600 rounded border-slate-300">
+                                            <span>Tất cả danh mục</span>
+                                        </label>
+                                        <div id="chart-cat-checkboxes" class="space-y-0.5"></div>
+                                    </div>
+                                </div>
+
+                                <!-- NÚT TẢI BIỂU ĐỒ PNG -->
+                                <button onclick="exportChartToImage()" class="bg-blue-50 hover:bg-blue-100 text-blue-600 border border-blue-200 text-xs px-3 py-2 rounded-lg font-semibold flex items-center gap-1.5 transition-all shadow-sm" title="Tải ảnh biểu đồ">
+                                    <i class="fa-solid fa-image"></i> Tải PNG
+                                </button>
+                            </div>
                         </div>
-                        <div class="h-72 relative w-full bg-slate-50 p-2 rounded-lg border border-slate-100">
+
+                        <!-- DROPDOWN CHỌN RIÊNG TỪNG SẢN PHẨM ĐỂ VẼ BIỂU ĐỒ -->
+                        <div class="flex items-center gap-2 bg-slate-50 p-3 rounded-lg border border-slate-200">
+                            <span class="text-xs font-semibold text-slate-600 uppercase whitespace-nowrap"><i class="fa-solid fa-box-open text-blue-500 mr-1"></i> Chọn Sản Phẩm Cụ Thể:</span>
+                            <div class="relative flex-1">
+                                <button type="button" onclick="toggleChartProdMenu()" id="chart-prod-btn" class="w-full bg-white border border-slate-200 text-xs rounded-lg px-3 py-2 text-left flex items-center justify-between text-slate-700">
+                                    <span id="chart-prod-label" class="truncate">Tất cả sản phẩm (trong danh mục đã chọn)</span>
+                                    <i class="fa-solid fa-chevron-down text-[10px] text-slate-400"></i>
+                                </button>
+                                <div id="chart-prod-menu" class="hidden absolute left-0 right-0 mt-1 rounded-xl bg-white shadow-xl border border-slate-200 z-30 p-2 space-y-1 max-h-56 overflow-y-auto">
+                                    <label class="flex items-center gap-2 px-2 py-1.5 hover:bg-slate-50 rounded text-xs font-bold border-b text-blue-600 pb-1.5 mb-1">
+                                        <input type="checkbox" id="chart-prod-all" onchange="toggleSelectAllChartProd(this.checked)" checked class="w-4 h-4 text-blue-600 rounded border-slate-300">
+                                        <span>Chọn tất cả sản phẩm</span>
+                                    </label>
+                                    <div id="chart-prod-checkboxes" class="space-y-0.5"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="h-64 relative w-full bg-slate-50 p-2 rounded-lg border border-slate-100">
                             <canvas id="inventoryChart"></canvas>
                         </div>
                     </div>
@@ -669,7 +706,6 @@
             const categoriesRef = ref(database, 'kho_hang/categories');
             const historyRef = ref(database, 'kho_hang/history');
 
-            // Đồng bộ Danh mục
             onValue(categoriesRef, (snapshot) => {
                 const data = snapshot.val();
                 if (data) {
@@ -679,12 +715,12 @@
                     saveDataToCloud();
                 }
                 if (typeof window.updateCategoryDropdowns === 'function') window.updateCategoryDropdowns();
+                if (typeof window.updateChartDropdowns === 'function') window.updateChartDropdowns();
                 if (!document.getElementById('tab-categories').classList.contains('hidden') && typeof window.renderCategories === 'function') {
                     window.renderCategories();
                 }
             });
 
-            // Đồng bộ Sản phẩm
             onValue(productsRef, (snapshot) => {
                 const data = snapshot.val();
                 if (data) {
@@ -692,11 +728,11 @@
                 } else {
                     saveDataToCloud();
                 }
+                if (typeof window.updateChartDropdowns === 'function') window.updateChartDropdowns();
                 if (typeof window.updateDashboard === 'function') window.updateDashboard();
                 if (typeof window.renderProducts === 'function') window.renderProducts();
             });
 
-            // Đồng bộ Lịch sử
             onValue(historyRef, (snapshot) => {
                 const data = snapshot.val();
                 if (data) {
@@ -728,7 +764,6 @@
 
     <!-- APPLICATION LOGIC JS -->
     <script>
-        // Đăng ký Plugin Datalabels cho Chart.js
         Chart.register(ChartDataLabels);
 
         window.categories = JSON.parse(localStorage.getItem('app_categories')) || ['Điện thoại', 'Laptop', 'Phụ kiện', 'Gia dụng'];
@@ -745,8 +780,9 @@
         let selectedImportProduct = null;
         let myChart = null;
 
-        // BIẾN QUẢN LÝ LỌC CATEGORY VÀ PHÂN TRANG (20 DÒNG/TRANG)
-        let selectedCategoriesFilter = []; // Trống = Chọn tất cả
+        let selectedCategoriesFilter = []; 
+        let selectedChartCategories = []; // Biến lọc danh mục trên biểu đồ
+        let selectedChartProducts = [];   // Biến lọc sản phẩm cụ thể trên biểu đồ
         let currentPage = 1;
         const pageSize = 20;
 
@@ -838,17 +874,22 @@
             document.getElementById('confirm-btn-cancel').onclick = closeConfirm;
         }
 
-        // --- XỬ LÝ DROPDOWN LỌC DANH MỤC ĐA CHỌN (CHECKBOX) ---
+        // --- QUẢN LÝ DROPDOWN LỌC DANH MỤC Ở SẢN PHẨM ---
         function toggleCategoryFilterMenu() {
-            const menu = document.getElementById('category-filter-menu');
-            if (menu) menu.classList.toggle('hidden');
+            document.getElementById('category-filter-menu').classList.toggle('hidden');
         }
 
         document.addEventListener('click', function(e) {
-            const container = document.getElementById('category-filter-dropdown-container');
-            const menu = document.getElementById('category-filter-menu');
-            if (container && menu && !container.contains(e.target)) {
-                menu.classList.add('hidden');
+            const cFilter = document.getElementById('category-filter-dropdown-container');
+            if (cFilter && !cFilter.contains(e.target)) document.getElementById('category-filter-menu').classList.add('hidden');
+
+            const cChartCat = document.getElementById('chart-cat-dropdown-container');
+            if (cChartCat && !cChartCat.contains(e.target)) document.getElementById('chart-cat-menu').classList.add('hidden');
+
+            const cChartProd = document.getElementById('chart-prod-menu');
+            const cChartProdBtn = document.getElementById('chart-prod-btn');
+            if (cChartProd && cChartProdBtn && !cChartProdBtn.contains(e.target) && !cChartProd.contains(e.target)) {
+                cChartProd.classList.add('hidden');
             }
         });
 
@@ -860,7 +901,7 @@
                     const isChecked = selectedCategoriesFilter.length === 0 || selectedCategoriesFilter.includes(cat);
                     return `
                         <label class="flex items-center gap-2 px-3 py-1.5 hover:bg-slate-50 rounded-lg cursor-pointer text-xs text-slate-700">
-                            <input type="checkbox" value="${safeCat}" onchange="onCategoryCheckboxChange()" ${isChecked ? 'checked' : ''} class="cat-filter-checkbox w-4 h-4 text-blue-600 rounded border-slate-300 focus:ring-blue-500 cursor-pointer">
+                            <input type="checkbox" value="${safeCat}" onchange="onCategoryCheckboxChange()" ${isChecked ? 'checked' : ''} class="cat-filter-checkbox w-4 h-4 text-blue-600 rounded border-slate-300">
                             <span class="truncate">${cat}</span>
                         </label>
                     `;
@@ -878,66 +919,147 @@
         };
 
         function toggleSelectAllCategoryFilter(isAllChecked) {
-            const checkboxes = document.querySelectorAll('.cat-filter-checkbox');
-            checkboxes.forEach(cb => cb.checked = isAllChecked);
-
-            if (isAllChecked) {
-                selectedCategoriesFilter = [];
-            } else {
-                selectedCategoriesFilter = ['__NONE__'];
-            }
-
+            document.querySelectorAll('.cat-filter-checkbox').forEach(cb => cb.checked = isAllChecked);
+            selectedCategoriesFilter = isAllChecked ? [] : ['__NONE__'];
             updateCategoryFilterLabel();
             onSearchOrFilterChange();
         }
 
         function onCategoryCheckboxChange() {
-            const checkboxes = document.querySelectorAll('.cat-filter-checkbox');
-            const checkedBoxes = Array.from(checkboxes).filter(cb => cb.checked);
-            const allCheckbox = document.getElementById('cat-checkbox-all');
-
-            if (checkedBoxes.length === checkboxes.length) {
+            const checked = Array.from(document.querySelectorAll('.cat-filter-checkbox')).filter(cb => cb.checked);
+            const allCb = document.getElementById('cat-checkbox-all');
+            if (checked.length === document.querySelectorAll('.cat-filter-checkbox').length) {
                 selectedCategoriesFilter = [];
-                if (allCheckbox) allCheckbox.checked = true;
+                if (allCb) allCb.checked = true;
             } else {
-                selectedCategoriesFilter = checkedBoxes.map(cb => cb.value);
-                if (allCheckbox) allCheckbox.checked = false;
+                selectedCategoriesFilter = checked.map(cb => cb.value);
+                if (allCb) allCb.checked = false;
             }
-
             updateCategoryFilterLabel();
             onSearchOrFilterChange();
         }
 
         function updateCategoryFilterLabel() {
             const label = document.getElementById('category-filter-label');
-            const allCheckbox = document.getElementById('cat-checkbox-all');
             if (!label) return;
-
             const total = window.categories.length;
             const count = selectedCategoriesFilter.length;
-
-            if (count === 0 || count === total) {
-                label.innerText = 'Tất cả danh mục';
-                if (allCheckbox) allCheckbox.checked = true;
-            } else if (count === 1 && selectedCategoriesFilter[0] !== '__NONE__') {
-                label.innerText = selectedCategoriesFilter[0];
-                if (allCheckbox) allCheckbox.checked = false;
-            } else if (selectedCategoriesFilter.includes('__NONE__') || count === 0) {
-                label.innerText = 'Chưa chọn danh mục';
-                if (allCheckbox) allCheckbox.checked = false;
-            } else {
-                label.innerText = `Đã chọn (${count}) danh mục`;
-                if (allCheckbox) allCheckbox.checked = false;
-            }
+            if (count === 0 || count === total) label.innerText = 'Tất cả danh mục';
+            else if (count === 1) label.innerText = selectedCategoriesFilter[0];
+            else label.innerText = `Đã chọn (${count}) danh mục`;
         }
 
         function onSearchOrFilterChange() {
             currentPage = 1;
             renderProducts();
-            updateDashboard(); // Cập nhật lại Biểu đồ khi lọc danh mục
         }
 
-        // --- HÀM RENDER SẢN PHẨM & PHÂN TRANG ---
+        // --- QUẢN LÝ LỌC BIỂU ĐỒ (DANH MỤC & SẢN PHẨM CỤ THỂ) ---
+        function toggleChartCatMenu() { document.getElementById('chart-cat-menu').classList.toggle('hidden'); }
+        function toggleChartProdMenu() { document.getElementById('chart-prod-menu').classList.toggle('hidden'); }
+
+        window.updateChartDropdowns = function() {
+            // 1. Checkbox danh mục cho biểu đồ
+            const catContainer = document.getElementById('chart-cat-checkboxes');
+            if (catContainer) {
+                catContainer.innerHTML = window.categories.map(cat => {
+                    const isChecked = selectedChartCategories.length === 0 || selectedChartCategories.includes(cat);
+                    return `
+                        <label class="flex items-center gap-2 px-2 py-1 hover:bg-slate-50 rounded cursor-pointer text-xs text-slate-700">
+                            <input type="checkbox" value="${cat}" onchange="onChartCatChange()" ${isChecked ? 'checked' : ''} class="chart-cat-cb w-4 h-4 text-blue-600 rounded border-slate-300">
+                            <span class="truncate">${cat}</span>
+                        </label>
+                    `;
+                }).join('');
+            }
+
+            // 2. Checkbox sản phẩm cụ thể cho biểu đồ (lọc theo danh mục biểu đồ đang chọn)
+            const prodContainer = document.getElementById('chart-prod-checkboxes');
+            if (prodContainer) {
+                const relevantProds = window.products.filter(p => {
+                    if (selectedChartCategories.length === 0) return true;
+                    if (selectedChartCategories.includes('__NONE__')) return false;
+                    return selectedChartCategories.includes(p.category);
+                });
+
+                prodContainer.innerHTML = relevantProds.map(p => {
+                    const isChecked = selectedChartProducts.length === 0 || selectedChartProducts.includes(p.id);
+                    return `
+                        <label class="flex items-center gap-2 px-2 py-1 hover:bg-slate-50 rounded cursor-pointer text-xs text-slate-700">
+                            <input type="checkbox" value="${p.id}" onchange="onChartProdChange()" ${isChecked ? 'checked' : ''} class="chart-prod-cb w-4 h-4 text-blue-600 rounded border-slate-300">
+                            <span class="truncate">${p.name} (${p.code})</span>
+                        </label>
+                    `;
+                }).join('');
+            }
+
+            updateChartLabels();
+        };
+
+        function toggleSelectAllChartCat(checked) {
+            document.querySelectorAll('.chart-cat-cb').forEach(cb => cb.checked = checked);
+            selectedChartCategories = checked ? [] : ['__NONE__'];
+            updateChartDropdowns();
+            renderChart();
+        }
+
+        function onChartCatChange() {
+            const checked = Array.from(document.querySelectorAll('.chart-cat-cb')).filter(cb => cb.checked);
+            const allCb = document.getElementById('chart-cat-all');
+            if (checked.length === document.querySelectorAll('.chart-cat-cb').length) {
+                selectedChartCategories = [];
+                if (allCb) allCb.checked = true;
+            } else {
+                selectedChartCategories = checked.map(cb => cb.value);
+                if (allCb) allCb.checked = false;
+            }
+            // Reset lại lựa chọn sản phẩm biểu đồ khi đổi danh mục
+            selectedChartProducts = [];
+            updateChartDropdowns();
+            renderChart();
+        }
+
+        function toggleSelectAllChartProd(checked) {
+            document.querySelectorAll('.chart-prod-cb').forEach(cb => cb.checked = checked);
+            selectedChartProducts = checked ? [] : ['__NONE__'];
+            updateChartLabels();
+            renderChart();
+        }
+
+        function onChartProdChange() {
+            const checkboxes = document.querySelectorAll('.chart-prod-cb');
+            const checked = Array.from(checkboxes).filter(cb => cb.checked);
+            const allCb = document.getElementById('chart-prod-all');
+            if (checked.length === checkboxes.length) {
+                selectedChartProducts = [];
+                if (allCb) allCb.checked = true;
+            } else {
+                selectedChartProducts = checked.map(cb => cb.value);
+                if (allCb) allCb.checked = false;
+            }
+            updateChartLabels();
+            renderChart();
+        }
+
+        function updateChartLabels() {
+            const catLabel = document.getElementById('chart-cat-label');
+            if (catLabel) {
+                const count = selectedChartCategories.length;
+                if (count === 0 || count === window.categories.length) catLabel.innerText = 'Tất cả danh mục';
+                else catLabel.innerText = `Đã chọn (${count}) danh mục`;
+            }
+
+            const prodLabel = document.getElementById('chart-prod-label');
+            if (prodLabel) {
+                const total = document.querySelectorAll('.chart-prod-cb').length;
+                const count = selectedChartProducts.length;
+                if (count === 0 || count === total) prodLabel.innerText = 'Tất cả sản phẩm (trong danh mục)';
+                else if (selectedChartProducts.includes('__NONE__')) prodLabel.innerText = 'Chưa chọn sản phẩm nào';
+                else prodLabel.innerText = `Đã chọn (${count}) sản phẩm cụ thể`;
+            }
+        }
+
+        // --- RENDER SẢN PHẨM & PHÂN TRANG (20 DÒNG/TRANG) ---
         let selectedProductIds = new Set();
 
         window.renderProducts = function() {
@@ -949,11 +1071,8 @@
                 const matchSearch = p.name.toLowerCase().includes(search) || p.code.toLowerCase().includes(search);
                 let matchCategory = true;
                 if (selectedCategoriesFilter.length > 0) {
-                    if (selectedCategoriesFilter.includes('__NONE__')) {
-                        matchCategory = false;
-                    } else {
-                        matchCategory = selectedCategoriesFilter.includes(p.category);
-                    }
+                    if (selectedCategoriesFilter.includes('__NONE__')) matchCategory = false;
+                    else matchCategory = selectedCategoriesFilter.includes(p.category);
                 }
                 return matchSearch && matchCategory;
             });
@@ -1014,118 +1133,66 @@
 
             let html = '';
             html += `
-                <button onclick="goToPage(1)" ${currentPage === 1 ? 'disabled' : ''} class="px-2.5 py-1 rounded border border-slate-200 bg-white hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed">
-                    <i class="fa-solid fa-angles-left"></i>
-                </button>
-                <button onclick="goToPage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''} class="px-2.5 py-1 rounded border border-slate-200 bg-white hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed">
-                    <i class="fa-solid fa-chevron-left"></i>
-                </button>
+                <button onclick="goToPage(1)" ${currentPage === 1 ? 'disabled' : ''} class="px-2.5 py-1 rounded border border-slate-200 bg-white hover:bg-slate-100 disabled:opacity-40"><i class="fa-solid fa-angles-left"></i></button>
+                <button onclick="goToPage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''} class="px-2.5 py-1 rounded border border-slate-200 bg-white hover:bg-slate-100 disabled:opacity-40"><i class="fa-solid fa-chevron-left"></i></button>
             `;
 
-            const maxVisiblePages = 5;
-            let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
-            let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
-
-            if (endPage - startPage + 1 < maxVisiblePages) {
-                startPage = Math.max(1, endPage - maxVisiblePages + 1);
-            }
-
-            for (let i = startPage; i <= endPage; i++) {
-                html += `
-                    <button onclick="goToPage(${i})" class="px-3 py-1 rounded font-semibold border ${i === currentPage ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-100'}">
-                        ${i}
-                    </button>
-                `;
+            for (let i = 1; i <= totalPages; i++) {
+                if (i === 1 || i === totalPages || (i >= currentPage - 1 && i <= currentPage + 1)) {
+                    html += `<button onclick="goToPage(${i})" class="px-3 py-1 rounded font-semibold border ${i === currentPage ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-slate-700 border-slate-200'}">${i}</button>`;
+                }
             }
 
             html += `
-                <button onclick="goToPage(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''} class="px-2.5 py-1 rounded border border-slate-200 bg-white hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed">
-                    <i class="fa-solid fa-chevron-right"></i>
-                </button>
-                <button onclick="goToPage(${totalPages})" ${currentPage === totalPages ? 'disabled' : ''} class="px-2.5 py-1 rounded border border-slate-200 bg-white hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed">
-                    <i class="fa-solid fa-angles-right"></i>
-                </button>
+                <button onclick="goToPage(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''} class="px-2.5 py-1 rounded border border-slate-200 bg-white hover:bg-slate-100 disabled:opacity-40"><i class="fa-solid fa-chevron-right"></i></button>
+                <button onclick="goToPage(${totalPages})" ${currentPage === totalPages ? 'disabled' : ''} class="px-2.5 py-1 rounded border border-slate-200 bg-white hover:bg-slate-100 disabled:opacity-40"><i class="fa-solid fa-angles-right"></i></button>
             `;
-
             controlsEl.innerHTML = html;
         }
 
-        function goToPage(page) {
-            currentPage = page;
-            renderProducts();
-        }
+        function goToPage(page) { currentPage = page; renderProducts(); }
 
         // --- QUẢN LÝ DANH MỤC LOGIC ---
         window.renderCategories = function() {
             const tbody = document.getElementById('categories-table-body');
             const badge = document.getElementById('category-count-badge');
             if (!tbody) return;
-
             badge.innerText = `${window.categories.length} danh mục`;
-
-            if (window.categories.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="4" class="text-center py-6 text-slate-400">Chưa có danh mục nào</td></tr>`;
-                return;
-            }
-
-            tbody.innerHTML = window.categories.map((cat, index) => {
-                const productCount = window.products.filter(p => p.category === cat).length;
-                const safeCat = cat.replace(/'/g, "\\'");
-                return `
-                    <tr class="hover:bg-slate-50 transition-colors">
-                        <td class="px-6 py-4 text-center font-semibold text-slate-500">${index + 1}</td>
-                        <td class="px-6 py-4 font-bold text-slate-900">${cat}</td>
-                        <td class="px-6 py-4 text-center"><span class="px-2.5 py-1 text-xs bg-blue-100 text-blue-700 rounded-full font-bold">${productCount} sản phẩm</span></td>
-                        <td class="px-6 py-4 text-center">
-                            <button onclick="deleteCategory('${safeCat}')" class="px-3 py-1 bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-lg font-medium text-xs border border-rose-200 transition-all">
-                                <i class="fa-solid fa-trash"></i> Xóa
-                            </button>
-                        </td>
-                    </tr>
-                `;
-            }).join('');
+            tbody.innerHTML = window.categories.length === 0 ? `<tr><td colspan="4" class="text-center py-6 text-slate-400">Chưa có danh mục</td></tr>` : window.categories.map((cat, index) => `
+                <tr class="hover:bg-slate-50 transition-colors">
+                    <td class="px-6 py-4 text-center font-semibold text-slate-500">${index + 1}</td>
+                    <td class="px-6 py-4 font-bold text-slate-900">${cat}</td>
+                    <td class="px-6 py-4 text-center"><span class="px-2.5 py-1 text-xs bg-blue-100 text-blue-700 rounded-full font-bold">${window.products.filter(p => p.category === cat).length} sản phẩm</span></td>
+                    <td class="px-6 py-4 text-center"><button onclick="deleteCategory('${cat.replace(/'/g, "\\'")}')" class="px-3 py-1 bg-rose-50 text-rose-600 rounded-lg text-xs border border-rose-200">Xóa</button></td>
+                </tr>
+            `).join('');
         };
 
         function addNewCategory(e) {
             e.preventDefault();
             const input = document.getElementById('new-category-name');
             const catName = input.value.trim();
-
-            if (!catName) return;
-
-            if (window.categories.includes(catName)) {
-                showToast('Danh mục này đã tồn tại!', 'error');
-                return;
-            }
-
+            if (!catName || window.categories.includes(catName)) return;
             window.categories.push(catName);
             input.value = '';
             saveData();
             renderCategories();
             updateCategoryDropdowns();
+            updateChartDropdowns();
             showToast('Thêm danh mục thành công!');
         }
 
         function deleteCategory(catName) {
-            const productCount = window.products.filter(p => p.category === catName).length;
-            if (productCount > 0) {
-                showToast(`Không thể xóa vì đang có ${productCount} sản phẩm thuộc danh mục này!`, 'error');
+            if (window.products.some(p => p.category === catName)) {
+                showToast('Không thể xóa vì còn sản phẩm thuộc danh mục này!', 'error');
                 return;
             }
-
-            showCustomConfirm({
-                title: "Xóa danh mục",
-                message: `Bạn có chắc chắn muốn xóa danh mục "${catName}" không?`,
-                confirmText: "Xóa danh mục",
-                onConfirm: () => {
-                    window.categories = window.categories.filter(c => c !== catName);
-                    selectedCategoriesFilter = selectedCategoriesFilter.filter(c => c !== catName);
-                    saveData();
-                    renderCategories();
-                    updateCategoryDropdowns();
-                    showToast('Đã xóa danh mục thành công!');
-                }
-            });
+            window.categories = window.categories.filter(c => c !== catName);
+            saveData();
+            renderCategories();
+            updateCategoryDropdowns();
+            updateChartDropdowns();
+            showToast('Đã xóa danh mục thành công!');
         }
 
         window.updateDashboard = function() {
@@ -1154,107 +1221,76 @@
             renderChart();
         };
 
-        // --- HÀM RENDER BIỂU ĐỒ THEO TÊN SẢN PHẨM & HIỂN THỊ GIÁ TRỊ TỒN KHO ---
+        // --- RENDER BIỂU ĐỒ TỒN KHO THEO SẢN PHẨM & DANH MỤC ĐÃ CHỌN ---
         function renderChart() {
             const canvas = document.getElementById('inventoryChart');
             const subtitle = document.getElementById('chart-subtitle');
             if (!canvas) return;
             const ctx = canvas.getContext('2d');
 
-            // 1. Lọc sản phẩm theo các danh mục được tick chọn
-            const filteredProds = window.products.filter(p => {
-                if (selectedCategoriesFilter.length === 0) return true;
-                if (selectedCategoriesFilter.includes('__NONE__')) return false;
-                return selectedCategoriesFilter.includes(p.category);
+            // Lọc sản phẩm theo lựa chọn biểu đồ
+            const chartProds = window.products.filter(p => {
+                let matchCat = true;
+                if (selectedChartCategories.length > 0) {
+                    if (selectedChartCategories.includes('__NONE__')) matchCat = false;
+                    else matchCat = selectedChartCategories.includes(p.category);
+                }
+
+                let matchProd = true;
+                if (selectedChartProducts.length > 0) {
+                    if (selectedChartProducts.includes('__NONE__')) matchProd = false;
+                    else matchProd = selectedChartProducts.includes(p.id);
+                }
+
+                return matchCat && matchProd;
             });
 
-            // Lấy nhãn là Tên sản phẩm và Dữ liệu là Số lượng tồn kho
-            const productNames = filteredProds.map(p => p.name);
-            const stockValues = filteredProds.map(p => p.stock);
-
             if (subtitle) {
-                if (selectedCategoriesFilter.length === 0) {
-                    subtitle.innerText = "Đang hiển thị toàn bộ sản phẩm các danh mục";
-                } else if (selectedCategoriesFilter.includes('__NONE__')) {
-                    subtitle.innerText = "Chưa chọn danh mục nào";
-                } else {
-                    subtitle.innerText = `Đang hiển thị theo (${selectedCategoriesFilter.length}) danh mục được chọn`;
-                }
+                subtitle.innerText = `Đang hiển thị ${chartProds.length} sản phẩm trên biểu đồ`;
             }
 
             if (myChart) myChart.destroy();
 
-            // Tạo biểu đồ mới
             myChart = new Chart(ctx, {
                 type: 'bar',
                 data: {
-                    labels: productNames.length ? productNames : ['Không có sản phẩm'],
+                    labels: chartProds.length ? chartProds.map(p => p.name) : ['Không có sản phẩm'],
                     datasets: [{
                         label: 'Số lượng tồn kho',
-                        data: stockValues.length ? stockValues : [0],
+                        data: chartProds.length ? chartProds.map(p => p.stock) : [0],
                         backgroundColor: '#3b82f6',
-                        borderColor: '#2563eb',
-                        borderWidth: 1,
                         borderRadius: 6
                     }]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    layout: {
-                        padding: { top: 25 } // Chừa khoảng trống phía trên cho nhãn số lượng
-                    },
+                    layout: { padding: { top: 25 } },
                     plugins: {
                         legend: { display: false },
-                        // Cấu hình hiển thị nhãn số lượng trực tiếp trên cột (DataLabels)
                         datalabels: {
                             anchor: 'end',
                             align: 'top',
                             color: '#1e293b',
                             font: { weight: 'bold', size: 11 },
-                            formatter: function(value) {
-                                return value > 0 ? value : '0';
-                            }
+                            formatter: (val) => val
                         }
                     },
                     scales: {
-                        y: {
-                            beginAtZero: true,
-                            grid: { color: '#f1f5f9' },
-                            ticks: { precision: 0 }
-                        },
-                        x: {
-                            grid: { display: false },
-                            ticks: {
-                                maxRotation: 45,
-                                minRotation: 0,
-                                font: { size: 11 }
-                            }
-                        }
+                        y: { beginAtZero: true, grid: { color: '#f1f5f9' }, ticks: { precision: 0 } },
+                        x: { grid: { display: false }, ticks: { maxRotation: 45, minRotation: 0, font: { size: 10 } } }
                     }
                 }
             });
         }
 
-        // --- HÀM XUẤT BIỂU ĐỒ RA FILE ẢNH PNG ---
         function exportChartToImage() {
-            if (!myChart) {
-                showToast('Chưa có biểu đồ để xuất!', 'error');
-                return;
-            }
-
-            // Tạo link tải ảnh PNG trực tiếp từ Canvas
-            const imageURI = myChart.toBase64Image();
+            if (!myChart) { showToast('Chưa có biểu đồ!', 'error'); return; }
             const link = document.createElement('a');
-            const today = new Date().toISOString().split('T')[0];
-            
-            link.download = `Bieu_Do_Ton_Kho_${today}.png`;
-            link.href = imageURI;
-            document.body.appendChild(link);
+            link.download = `Bieu_Do_Ton_Kho_${new Date().toISOString().split('T')[0]}.png`;
+            link.href = myChart.toBase64Image();
             link.click();
-            document.body.removeChild(link);
-
-            showToast('Đã tải xuống file hình ảnh biểu đồ tồn kho (PNG)!');
+            showToast('Đã tải xuống ảnh biểu đồ!');
         }
 
         function exportStockToExcel() {
@@ -1277,20 +1313,9 @@
 
         function toggleSelectAllProducts(masterCheckbox) {
             const search = document.getElementById('product-search').value.toLowerCase();
-            const filtered = window.products.filter(p => {
-                const matchSearch = p.name.toLowerCase().includes(search) || p.code.toLowerCase().includes(search);
-                let matchCategory = true;
-                if (selectedCategoriesFilter.length > 0) {
-                    matchCategory = !selectedCategoriesFilter.includes('__NONE__') && selectedCategoriesFilter.includes(p.category);
-                }
-                return matchSearch && matchCategory;
-            });
-
-            if (masterCheckbox.checked) {
-                filtered.forEach(p => selectedProductIds.add(String(p.id)));
-            } else {
-                filtered.forEach(p => selectedProductIds.delete(String(p.id)));
-            }
+            const filtered = window.products.filter(p => p.name.toLowerCase().includes(search) || p.code.toLowerCase().includes(search));
+            if (masterCheckbox.checked) filtered.forEach(p => selectedProductIds.add(String(p.id)));
+            else filtered.forEach(p => selectedProductIds.delete(String(p.id)));
             renderProducts();
         }
 
@@ -1362,7 +1387,7 @@
             document.getElementById('product-modal').classList.remove('hidden');
         }
 
-        // --- NHẬP KHO TÌM KIẾM ---
+        // --- NHẬP KHO & POS & LỊCH SỬ ---
         function onImportSearchInput(query) {
             const list = document.getElementById('import-suggestions-list');
             const q = query.trim().toLowerCase();
@@ -1437,7 +1462,6 @@
             importCart = []; renderImportItems();
         }
 
-        // --- POS & LỊCH SỬ ---
         function renderPosProducts() {
             const search = document.getElementById('pos-search').value.toLowerCase();
             const grid = document.getElementById('pos-product-grid');
@@ -1528,7 +1552,6 @@
 
         window.onload = function() { updateDashboard(); };
 
-        // Excel import modal helpers
         let parsedExcelProducts = [];
         function openExcelModal() { document.getElementById('excel-modal').classList.remove('hidden'); }
         function closeExcelModal() { document.getElementById('excel-modal').classList.add('hidden'); }
