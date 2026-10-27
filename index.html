@@ -1633,53 +1633,174 @@
         }
         function onSearchOrFilterChange() { currentPage = 1; renderProducts(); }
 
-        // XUẤT EXCEL TỰ ĐỘNG THEO CÁC BỘ LỌC ĐANG CHỌN (DANH MỤC + TỒN KHO + TÌM KIẾM)
-        function exportStockToExcel() {
-            const search = document.getElementById('product-search').value.toLowerCase();
-            const stockOp = document.getElementById('stock-filter-op')?.value || 'all';
-            const stockValRaw = document.getElementById('stock-filter-val')?.value;
-            const stockVal = stockValRaw !== "" && stockValRaw !== undefined ? parseFloat(stockValRaw) : null;
+       function exportStockToExcel() {
+        const search = document.getElementById('product-search').value.toLowerCase();
+        const stockOp = document.getElementById('stock-filter-op')?.value || 'all';
+        const stockValRaw = document.getElementById('stock-filter-val')?.value;
+        const stockVal = stockValRaw !== "" && stockValRaw !== undefined ? parseFloat(stockValRaw) : null;
 
-            const filteredProds = window.products.filter(p => {
-                const matchSearch = p.name.toLowerCase().includes(search) || p.code.toLowerCase().includes(search);
-                
-                let matchCategory = true;
-                if (selectedCategoriesFilter.length > 0) {
-                    if (selectedCategoriesFilter.includes('__NONE__')) matchCategory = false;
-                    else matchCategory = selectedCategoriesFilter.includes(p.category);
-                }
-
-                let matchStock = true;
-                if (stockOp !== 'all' && stockVal !== null && !isNaN(stockVal)) {
-                    const currentStock = Number(p.stock) || 0;
-                    if (stockOp === 'gt') matchStock = currentStock > stockVal;
-                    else if (stockOp === 'lt') matchStock = currentStock < stockVal;
-                    else if (stockOp === 'eq') matchStock = currentStock === stockVal;
-                }
-
-                return matchSearch && matchCategory && matchStock;
-            });
-
-            if (filteredProds.length === 0) { 
-                showToast('Không có sản phẩm nào phù hợp điều kiện lọc!', 'error'); 
-                return; 
+        const filteredProds = window.products.filter(p => {
+            const matchSearch = p.name.toLowerCase().includes(search) || p.code.toLowerCase().includes(search);
+            
+            let matchCategory = true;
+            if (selectedCategoriesFilter.length > 0) {
+                if (selectedCategoriesFilter.includes('__NONE__')) matchCategory = false;
+                else matchCategory = selectedCategoriesFilter.includes(p.category);
             }
 
-            const worksheet = XLSX.utils.json_to_sheet(filteredProds.map((p, i) => ({ 
-                "STT": i + 1, 
-                "Mã SP": p.code, 
-                "Tên SP": p.name, 
-                "Danh Mục": p.category, 
-                "Giá Nhập": p.importPrice, 
-                "Giá Bán": p.sellPrice, 
-                "Tồn Kho": p.stock 
-            })));
+            let matchStock = true;
+            if (stockOp !== 'all' && stockVal !== null && !isNaN(stockVal)) {
+                const currentStock = Number(p.stock) || 0;
+                if (stockOp === 'gt') matchStock = currentStock > stockVal;
+                else if (stockOp === 'lt') matchStock = currentStock < stockVal;
+                else if (stockOp === 'eq') matchStock = currentStock === stockVal;
+            }
 
-            const workbook = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(workbook, worksheet, "Ton_Kho");
-            XLSX.writeFile(workbook, `Bao_Cao_Ton_Kho_Danh_Muc_${new Date().toISOString().split('T')[0]}.xlsx`);
-            showToast('Đã xuất Excel thành công!');
+            return matchSearch && matchCategory && matchStock;
+        });
+
+        if (filteredProds.length === 0) { 
+            showToast('Không có sản phẩm nào phù hợp điều kiện lọc!', 'error'); 
+            return; 
         }
+
+        // Nhóm các sản phẩm theo "Danh mục"
+        const groupedByCategory = {};
+        filteredProds.forEach(p => {
+            const cat = p.category || 'Khác';
+            if (!groupedByCategory[cat]) groupedByCategory[cat] = [];
+            groupedByCategory[cat].push(p);
+        });
+
+        // Xây dựng mảng dữ liệu cho Sheet theo cấu trúc bảng đẹp mắt
+        const excelRows = [];
+
+        // Thêm tiêu đề báo cáo lớn ở trên cùng
+        excelRows.push(["BÁO CÁO TỒN KHO VÀ SẢN PHẨM THEO DANH MỤC"]);
+        excelRows.push(["Ngày xuất báo cáo:", new Date().toLocaleDateString('vi-VN')]);
+        excelRows.push([]); // Dòng trống cách
+
+        let stt = 1;
+        let grandTotalStock = 0;
+        let grandTotalValue = 0;
+
+        // Duyệt qua từng danh mục để tạo nhóm
+        Object.keys(groupedByCategory).forEach(catName => {
+            const productsInCat = groupedByCategory[catName];
+
+            // 1. Dòng tiêu đề của Danh mục
+            excelRows.push([`DANH MỤC: ${catName.toUpperCase()}`, "", "", "", "", "", "", ""]);
+
+            // 2. Tiêu đề các cột dữ liệu
+            excelRows.push(["STT", "Mã SP", "Tên Sản Phẩm", "Danh Mục", "Giá Nhập (₫)", "Giá Bán (₫)", "Tồn Kho", "Tổng Giá Trị (₫)"]);
+
+            let catTotalStock = 0;
+            let catTotalValue = 0;
+
+            // 3. Các dòng sản phẩm trong danh mục
+            productsInCat.forEach(p => {
+                const totalVal = (Number(p.stock) || 0) * (Number(p.sellPrice) || 0);
+                catTotalStock += Number(p.stock) || 0;
+                catTotalValue += totalVal;
+
+                excelRows.push([
+                    stt++,
+                    p.code,
+                    p.name,
+                    p.category,
+                    p.importPrice,
+                    p.sellPrice,
+                    p.stock,
+                    totalVal
+                ]);
+            });
+
+            grandTotalStock += catTotalStock;
+            grandTotalValue += catTotalValue;
+
+            // 4. Dòng tổng kết cho từng danh mục
+            excelRows.push(["", "", `Tổng cộng danh mục [${catName}]`, "", "", "", catTotalStock, catTotalValue]);
+            excelRows.push([]); // Dòng trống giữa các danh mục
+        });
+
+        // Tổng kết toàn bộ báo cáo
+        excelRows.push(["", "", "TỔNG CỘNG TOÀN BỘ BÁO CÁO", "", "", "", grandTotalStock, grandTotalValue]);
+
+        // Tạo worksheet từ mảng dữ liệu
+        const worksheet = XLSX.utils.aoa_to_sheet(excelRows);
+
+        // --- TRANG TRÍ VÀ TÔ MÀU EXCEL (STYLING) ---
+        if(!worksheet['!cols']) worksheet['!cols'] = [];
+        worksheet['!cols'] = [
+            { wch: 6 },   // STT
+            { wch: 15 },  // Mã SP
+            { wch: 32 },  // Tên SP
+            { wch: 20 },  // Danh Mục
+            { wch: 18 },  // Giá Nhập
+            { wch: 18 },  // Giá Bán
+            { wch: 10 },  // Tồn Kho
+            { wch: 20 }   // Tổng Giá Trị
+        ];
+
+        // Lặp qua các ô để tô màu và căn chỉnh
+        const range = XLSX.utils.decode_range(worksheet['!ref']);
+        for (let R = range.s.r; R <= range.e.r; ++R) {
+            const cellA = worksheet[XLSX.utils.encode_cell({r: R, c: 0})];
+            const cellText = cellA ? String(cellA.v) : "";
+
+            // Định dạng Tiêu đề nhóm danh mục
+            if (cellText.startsWith("DANH MỤC:")) {
+                for (let C = range.s.c; C <= range.e.c; ++C) {
+                    const cellRef = XLSX.utils.encode_cell({r: R, c: C});
+                    if (!worksheet[cellRef]) worksheet[cellRef] = { v: C === 0 ? cellText : "" };
+                    worksheet[cellRef].s = {
+                        fill: { fgColor: { rgb: "1E293B" } }, // Màu xanh slate đậm
+                        font: { bold: true, color: { rgb: "FFFFFF" }, sz: 11 },
+                        alignment: { vertical: "center", horizontal: "left" }
+                    };
+                }
+            }
+            // Định dạng Tiêu đề bảng (Header cột)
+            else if (cellText === "STT") {
+                for (let C = range.s.c; C <= range.e.c; ++C) {
+                    const cellRef = XLSX.utils.encode_cell({r: R, c: C});
+                    if (worksheet[cellRef]) {
+                        worksheet[cellRef].s = {
+                            fill: { fgColor: { rgb: "475569" } }, // Màu xám xanh trung tính
+                            font: { bold: true, color: { rgb: "FFFFFF" }, sz: 10 },
+                            alignment: { vertical: "center", horizontal: "center" },
+                            border: {
+                                top: { style: "thin", color: { rgb: "CBD5E1" } },
+                                bottom: { style: "thin", color: { rgb: "CBD5E1" } },
+                                left: { style: "thin", color: { rgb: "CBD5E1" } },
+                                right: { style: "thin", color: { rgb: "CBD5E1" } }
+                            }
+                        };
+                    }
+                }
+            }
+            // Định dạng Dòng tổng cộng (Danh mục hoặc Toàn bộ)
+            else if (cellText.includes("Tổng cộng danh mục") || cellText.includes("TỔNG CỘNG TOÀN BỘ BÁO CÁO")) {
+                for (let C = range.s.c; C <= range.e.c; ++C) {
+                    const cellRef = XLSX.utils.encode_cell({r: R, c: C});
+                    if (!worksheet[cellRef]) worksheet[cellRef] = { v: "" };
+                    worksheet[cellRef].s = {
+                        fill: { fgColor: { rgb: cellText.includes("TỔNG CỘNG TOÀN BỘ") ? "DBEAFE" : "F1F5F9" } },
+                        font: { bold: true, color: { rgb: cellText.includes("TỔNG CỘNG TOÀN BỘ") ? "1D4ED8" : "0F172A" } },
+                        border: {
+                            top: { style: "thin", color: { rgb: "94A3B8" } },
+                            bottom: { style: "double", color: { rgb: "94A3B8" } }
+                        }
+                    };
+                }
+            }
+        }
+
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, "Phan_Loai_Ton_Kho");
+        XLSX.writeFile(workbook, `Bao_Cao_Phan_Loai_Theo_Danh_Muc_${new Date().toISOString().split('T')[0]}.xlsx`);
+        showToast('Đã xuất Excel phân loại theo danh mục thành công!');
+    }
 
         function openProductModal(isEdit = false) {
             document.getElementById('product-modal').classList.remove('hidden');
