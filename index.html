@@ -68,7 +68,7 @@
             </nav>
         </div>
         <div class="p-4 border-t border-slate-800 text-xs text-slate-500 flex items-center justify-between">
-            <span>Phiên bản v2.2</span>
+            <span>Phiên bản v2.3</span>
             <span id="cloud-status-dot" class="inline-block w-2 h-2 rounded-full bg-amber-500" title="Đang kết nối..."></span>
         </div>
     </aside>
@@ -578,6 +578,7 @@
                 if (typeof window.updateCategoryDropdowns === 'function') window.updateCategoryDropdowns();
                 if (typeof window.updateChartDropdowns === 'function') window.updateChartDropdowns();
                 if (typeof window.updatePosCategoryDropdown === 'function') window.updatePosCategoryDropdown();
+                if (typeof window.renderCategoryCheckboxes === 'function') window.renderCategoryCheckboxes();
                 if (!document.getElementById('tab-categories').classList.contains('hidden')) window.renderCategories();
             });
             onValue(ref(database, 'kho_hang/products'), (snap) => {
@@ -663,7 +664,10 @@
             };
             document.getElementById('page-title').innerText = titles[tabId] || 'Quản lý';
 
-            if (tabId === 'products') renderProducts();
+            if (tabId === 'products') {
+                renderCategoryCheckboxes();
+                renderProducts();
+            }
             if (tabId === 'categories') renderCategories();
             if (tabId === 'export') { updatePosCategoryDropdown(); renderPosProducts(); renderCart(); }
             if (tabId === 'import-history') renderImportHistory();
@@ -689,6 +693,31 @@
             select.innerHTML = '<option value="">Tất cả danh mục</option>' + window.categories.map(cat => `<option value="${cat}">${cat}</option>`).join('');
             select.value = currentVal;
         };
+
+        // --- KHẮC PHỤC LỖI category-filter-label & DROPDOWN DANH MỤC SẢN PHẨM ---
+        window.renderCategoryCheckboxes = function() {
+            const container = document.getElementById('category-checkboxes-list');
+            if (!container) return;
+            container.innerHTML = window.categories.map(cat => {
+                const isChecked = selectedCategoriesFilter.length === 0 || selectedCategoriesFilter.includes(cat);
+                return `<label class="flex items-center gap-2 px-3 py-1.5 hover:bg-slate-50 rounded-lg cursor-pointer text-xs text-slate-700">
+                    <input type="checkbox" value="${cat}" onchange="onCategoryCheckboxChange()" ${isChecked ? 'checked' : ''} class="cat-filter-checkbox w-4 h-4 text-blue-600 rounded border-slate-300">
+                    <span class="truncate">${cat}</span>
+                </label>`;
+            }).join('');
+            updateCategoryFilterLabel();
+        };
+
+        function updateCategoryFilterLabel() {
+            const label = document.getElementById('category-filter-label');
+            if (!label) return;
+            const count = selectedCategoriesFilter.length;
+            if (count === 0 || count === window.categories.length) {
+                label.innerText = 'Tất cả danh mục';
+            } else {
+                label.innerText = `Đã chọn (${count}) danh mục`;
+            }
+        }
 
         function parseDateString(dateStr) {
             try {
@@ -716,7 +745,7 @@
                 } else if (cardFilter === 'week') {
                     const onejan = new Date(d.getFullYear(), 0, 1);
                     const weekD = Math.ceil((((d - onejan) / 86400000) + onejan.getDay() + 1) / 7);
-                    const weekNow = Math.ceil((((now - onejan) / 86400000) + onejan.getDay() + 1) / 7);
+                    const weekNow = Math.ceil((((now - onejan) / 86400000) + now.getDay() + 1) / 7);
                     return weekD === weekNow && d.getFullYear() === now.getFullYear();
                 } else if (cardFilter === 'month') {
                     return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
@@ -1101,6 +1130,7 @@
             updateCategoryDropdowns();
             updateChartDropdowns();
             updatePosCategoryDropdown();
+            renderCategoryCheckboxes();
             showToast('Thêm danh mục thành công!');
         }
 
@@ -1112,6 +1142,7 @@
             updateCategoryDropdowns();
             updateChartDropdowns();
             updatePosCategoryDropdown();
+            renderCategoryCheckboxes();
             showToast('Đã xóa danh mục!');
         }
 
@@ -1150,19 +1181,37 @@
             renderCart();
         }
 
-        // Đã sửa lỗi "item is not defined" bằng cách dùng trực tiếp ID sản phẩm trong giỏ
-        function updateCartQty(id, change) {
+        // Hỗ trợ nhập số lượng trực tiếp bằng bàn phím
+        function updateCartQtyDirect(id, val) {
             const item = cart.find(i => i.id === id);
             if (!item) return;
-            item.qty += change;
-            if (item.qty <= 0) {
+            let newQty = parseInt(val);
+            if (isNaN(newQty) || newQty <= 0) {
                 cart = cart.filter(i => i.id !== id);
             } else {
                 const p = window.products.find(prod => prod.id === id);
-                if (p && item.qty > p.stock) {
-                    item.qty = p.stock;
+                if (p && newQty > p.stock) {
+                    newQty = p.stock;
+                    showToast('Vượt quá số lượng tồn kho!', 'error');
+                }
+                item.qty = newQty;
+            }
+            renderCart();
+        }
+
+        function updateCartQty(id, change) {
+            const item = cart.find(i => i.id === id);
+            if (!item) return;
+            let newQty = item.qty + change;
+            if (newQty <= 0) {
+                cart = cart.filter(i => i.id !== id);
+            } else {
+                const p = window.products.find(prod => prod.id === id);
+                if (p && newQty > p.stock) {
+                    newQty = p.stock;
                     showToast('Đạt giới hạn tồn kho!', 'error');
                 }
+                item.qty = newQty;
             }
             renderCart();
         }
@@ -1178,7 +1227,7 @@
                     <div class="truncate pr-2"><p class="font-semibold truncate">${item.name}</p><p class="text-[11px] text-slate-500">${formatVND(item.price)}</p></div>
                     <div class="flex items-center gap-1 shrink-0">
                         <button onclick="updateCartQty('${item.id}', -1)" class="w-5 h-5 bg-slate-100 rounded text-slate-700 font-bold">-</button>
-                        <span class="w-5 text-center font-bold text-xs">${item.qty}</span>
+                        <input type="number" min="1" value="${item.qty}" onchange="updateCartQtyDirect('${item.id}', this.value)" class="w-10 text-center font-bold text-xs border rounded p-0.5 outline-none">
                         <button onclick="updateCartQty('${item.id}', 1)" class="w-5 h-5 bg-slate-100 rounded text-slate-700 font-bold">+</button>
                     </div>
                 </div>`;
@@ -1266,8 +1315,8 @@
         window.onload = function() { 
             updateDashboard(); 
             updatePosCategoryDropdown(); 
+            renderCategoryCheckboxes();
 
-            // Thêm sự kiện bật/tắt menu trên thiết bị di động
             document.getElementById('mobile-menu-btn')?.addEventListener('click', () => {
                 const sidebar = document.getElementById('sidebar');
                 sidebar.classList.toggle('hidden');
@@ -1315,11 +1364,13 @@
         function toggleSelectAllCategoryFilter(checked) {
             document.querySelectorAll('.cat-filter-checkbox').forEach(cb => cb.checked = checked);
             selectedCategoriesFilter = checked ? [] : ['__NONE__'];
+            updateCategoryFilterLabel();
             renderProducts();
         }
         function onCategoryCheckboxChange() {
             const checked = Array.from(document.querySelectorAll('.cat-filter-checkbox')).filter(cb => cb.checked);
             selectedCategoriesFilter = checked.length === document.querySelectorAll('.cat-filter-checkbox').length ? [] : checked.map(cb => cb.value);
+            updateCategoryFilterLabel();
             renderProducts();
         }
         function onSearchOrFilterChange() { currentPage = 1; renderProducts(); }
@@ -1333,6 +1384,8 @@
         }
         function openProductModal(isEdit = false) {
             document.getElementById('product-modal').classList.remove('hidden');
+            const select = document.getElementById('prod-category');
+            select.innerHTML = window.categories.map(c => `<option value="${c}">${c}</option>`).join('');
             if (!isEdit) { document.getElementById('modal-title').innerText = "Thêm Sản Phẩm Mới"; document.getElementById('product-form').reset(); document.getElementById('prod-id').value = ''; }
         }
         function closeProductModal() { document.getElementById('product-modal').classList.add('hidden'); }
@@ -1358,6 +1411,7 @@
         function editProduct(id) {
             const p = window.products.find(prod => String(prod.id) === String(id));
             if (!p) return;
+            openProductModal(true);
             document.getElementById('modal-title').innerText = "Chỉnh Sửa Sản Phẩm";
             document.getElementById('prod-id').value = p.id;
             document.getElementById('prod-code').value = p.code;
@@ -1367,7 +1421,6 @@
             document.getElementById('prod-sell-price').value = p.sellPrice;
             document.getElementById('prod-stock').value = p.stock;
             document.getElementById('prod-min-stock').value = p.minStock;
-            document.getElementById('product-modal').classList.remove('hidden');
         }
         function deleteProduct(id) {
             window.products = window.products.filter(p => String(p.id) !== String(id));
