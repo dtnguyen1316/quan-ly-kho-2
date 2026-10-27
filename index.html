@@ -50,7 +50,6 @@
                     <span>Quản lý Danh mục</span>
                 </button>
                 <button onclick="switchTab('import')" id="nav-import" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-slate-400 hover:bg-slate-800 hover:text-white transition-all">
-                    <!-- THÊM ICON RIÊNG CHO NHẬP KHO TRÊN MENU CHÍNH -->
                     <i class="fa-solid fa-file-arrow-down w-5 text-center text-emerald-400"></i>
                     <span>Nhập kho</span>
                 </button>
@@ -58,7 +57,6 @@
                     <i class="fa-solid fa-cart-shopping w-5 text-center text-amber-400"></i>
                     <span>Bán hàng (Xuất kho)</span>
                 </button>
-                <!-- PHÂN TÁCH LỊCH SỬ THÀNH 2 TAB RIÊNG BIỆT -->
                 <button onclick="switchTab('import-history')" id="nav-import-history" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-slate-400 hover:bg-slate-800 hover:text-white transition-all">
                     <i class="fa-solid fa-clock-rotate-left w-5 text-center text-emerald-400"></i>
                     <span>Lịch sử Nhập kho</span>
@@ -70,7 +68,7 @@
             </nav>
         </div>
         <div class="p-4 border-t border-slate-800 text-xs text-slate-500 flex items-center justify-between">
-            <span>Phiên bản v2.0 (Firebase)</span>
+            <span>Phiên bản v2.1 (Firebase)</span>
             <span id="cloud-status-dot" class="inline-block w-2 h-2 rounded-full bg-amber-500" title="Đang kết nối..."></span>
         </div>
     </aside>
@@ -105,14 +103,25 @@
             <!-- TAB 1: DASHBOARD -->
             <section id="tab-dashboard" class="tab-content space-y-6">
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                    <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
-                        <div>
+                    <!-- THẺ TỔNG DOANH THU CÓ LỌC THỜI GIAN -->
+                    <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between">
+                        <div class="flex items-center justify-between">
                             <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Tổng Doanh Thu</p>
-                            <h3 id="dash-revenue" class="text-2xl font-bold text-slate-900 mt-1">0 ₫</h3>
-                            <p class="text-xs text-emerald-600 mt-2 font-medium"><i class="fa-solid fa-arrow-trend-up"></i> Từ các đơn bán</p>
+                            <select id="revenue-card-filter" onchange="updateDashboard()" class="bg-slate-50 border border-slate-200 text-[11px] rounded px-2 py-1 font-medium text-slate-700 outline-none">
+                                <option value="today">Hôm nay</option>
+                                <option value="week">Tuần này</option>
+                                <option value="month" selected>Tháng này</option>
+                                <option value="quarter">Quý này</option>
+                                <option value="year">Năm nay</option>
+                                <option value="all">Tất cả</option>
+                            </select>
                         </div>
-                        <div class="w-12 h-12 bg-emerald-50 rounded-lg flex items-center justify-center text-emerald-600 text-xl"><i class="fa-solid fa-sack-dollar"></i></div>
+                        <div class="mt-2">
+                            <h3 id="dash-revenue" class="text-2xl font-bold text-slate-900">0 ₫</h3>
+                            <p class="text-xs text-emerald-600 mt-1 font-medium"><i class="fa-solid fa-arrow-trend-up"></i> Từ các đơn bán</p>
+                        </div>
                     </div>
+
                     <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
                         <div>
                             <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Tổng Sản Phẩm</p>
@@ -147,7 +156,7 @@
                             <span id="revenue-chart-subtitle" class="text-xs text-slate-500">Thống kê doanh số bán hàng</span>
                         </div>
                         <div class="flex items-center gap-2">
-                            <select id="revenue-time-filter" onchange="renderRevenueChart()" class="bg-slate-50 border border-slate-200 text-xs rounded-lg px-3 py-2 font-medium text-slate-700 focus:ring-2 focus:ring-blue-500 outline-none">
+                            <select id="revenue-time-filter" onchange="renderRevenueChart()" class="bg-slate-50 border border-slate-200 text-xs rounded-lg px-3 py-2 font-medium text-slate-700 outline-none">
                                 <option value="day">Theo Ngày</option>
                                 <option value="week">Theo Tuần</option>
                                 <option value="month">Theo Tháng</option>
@@ -377,42 +386,43 @@
                 </div>
             </section>
 
-            <!-- TAB 5: EXPORT / SALE (POS) -->
+            <!-- TAB 5: EXPORT / SALE (POS - SẢN PHẨM NHỎ GỌN) -->
             <section id="tab-export" class="tab-content hidden space-y-6">
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     <div class="lg:col-span-2 space-y-4">
-                        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col sm:flex-row gap-3 items-center">
+                        <div class="bg-white p-3 rounded-xl border border-slate-200 shadow-sm flex flex-col sm:flex-row gap-3 items-center">
                             <div class="relative flex-1 w-full">
                                 <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
-                                <input type="text" id="pos-search" oninput="renderPosProducts()" placeholder="Tìm sản phẩm cần bán..." class="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500">
+                                <input type="text" id="pos-search" oninput="renderPosProducts()" placeholder="Tìm sản phẩm cần bán..." class="w-full pl-9 pr-4 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs outline-none focus:ring-2 focus:ring-blue-500">
                             </div>
-                            <div class="w-full sm:w-52">
-                                <select id="pos-category-filter" onchange="renderPosProducts()" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-700 outline-none focus:ring-2 focus:ring-blue-500">
+                            <div class="w-full sm:w-48">
+                                <select id="pos-category-filter" onchange="renderPosProducts()" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs text-slate-700 outline-none focus:ring-2 focus:ring-blue-500">
                                     <option value="">Tất cả danh mục</option>
                                 </select>
                             </div>
                         </div>
-                        <div id="pos-product-grid" class="grid grid-cols-2 sm:grid-cols-3 gap-4 max-h-[calc(100vh-280px)] overflow-y-auto pr-1"></div>
+                        <!-- LƯỚI SẢN PHẨM THIẾT KẾ NHỎ GỌN (grid-cols-3 sm:grid-cols-4) -->
+                        <div id="pos-product-grid" class="grid grid-cols-3 sm:grid-cols-4 gap-2.5 max-h-[calc(100vh-260px)] overflow-y-auto pr-1"></div>
                     </div>
 
-                    <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between h-[calc(100vh-180px)]">
+                    <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between h-[calc(100vh-160px)]">
                         <div>
-                            <div class="border-b pb-3 mb-3 flex justify-between items-center">
-                                <h2 class="font-bold text-slate-800 flex items-center gap-2"><i class="fa-solid fa-cart-shopping text-blue-600"></i> Đơn Hàng Mới</h2>
-                                <button onclick="clearCart()" class="text-xs text-rose-500 hover:underline">Xóa tất cả</button>
+                            <div class="border-b pb-2.5 mb-2.5 flex justify-between items-center">
+                                <h2 class="font-bold text-slate-800 text-sm flex items-center gap-1.5"><i class="fa-solid fa-cart-shopping text-blue-600"></i> Đơn Hàng Mới</h2>
+                                <button onclick="clearCart()" class="text-[11px] text-rose-500 hover:underline">Xóa tất cả</button>
                             </div>
-                            <div id="cart-items" class="space-y-3 overflow-y-auto max-h-[320px] pr-1 divide-y divide-slate-100"></div>
+                            <div id="cart-items" class="space-y-2 overflow-y-auto max-h-[300px] pr-1 divide-y divide-slate-100"></div>
                         </div>
-                        <div class="border-t pt-4 space-y-3">
+                        <div class="border-t pt-3 space-y-2.5">
                             <div>
-                                <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Tên Khách Hàng</label>
-                                <input type="text" id="customer-name" placeholder="Khách lẻ..." class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-sm outline-none">
+                                <label class="block text-[11px] font-semibold text-slate-600 uppercase mb-1">Tên Khách Hàng</label>
+                                <input type="text" id="customer-name" placeholder="Khách lẻ..." class="w-full bg-slate-50 border border-slate-200 rounded-lg p-1.5 text-xs outline-none">
                             </div>
-                            <div class="space-y-1 text-sm">
+                            <div class="space-y-1 text-xs">
                                 <div class="flex justify-between text-slate-600"><span>Tổng số lượng:</span><span id="cart-total-qty" class="font-bold">0</span></div>
-                                <div class="flex justify-between text-lg font-bold text-slate-900 pt-2 border-t"><span>Tổng tiền:</span><span id="cart-total-price" class="text-blue-600">0 ₫</span></div>
+                                <div class="flex justify-between text-base font-bold text-slate-900 pt-1.5 border-t"><span>Tổng tiền:</span><span id="cart-total-price" class="text-blue-600">0 ₫</span></div>
                             </div>
-                            <button onclick="processExport()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-lg shadow transition-all flex items-center justify-center gap-2 mt-2"><i class="fa-solid fa-print"></i> Thanh Toán & Xuất Kho</button>
+                            <button onclick="processExport()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 rounded-lg shadow transition-all flex items-center justify-center gap-2 text-xs"><i class="fa-solid fa-print"></i> Thanh Toán & Xuất Kho</button>
                         </div>
                     </div>
                 </div>
@@ -683,12 +693,49 @@
             select.value = currentVal;
         };
 
+        function parseDateString(dateStr) {
+            try {
+                const parts = dateStr.split(',')[0].trim().split('/');
+                if (parts.length === 3) return new Date(`${parts[2]}-${parts[1]}-${parts[0]}`);
+            } catch(e) {}
+            return new Date(dateStr);
+        }
+
+        // --- CẬP NHẬT DOANH THU THEO BỘ LỌC NGÀY, TUẦN, THÁNG, QUÝ, NĂM ---
         function updateDashboard() {
             const totalProducts = window.products.length;
             const lowStockProducts = window.products.filter(p => p.stock <= p.minStock);
             const exportOrders = window.historyData.filter(h => h.type === 'EXPORT');
             const totalOrders = exportOrders.length;
-            const totalRevenue = exportOrders.reduce((sum, h) => sum + h.total, 0);
+
+            // Lọc tổng doanh thu theo thẻ select mới
+            const cardFilter = document.getElementById('revenue-card-filter')?.value || 'month';
+            const now = new Date();
+            
+            const filteredRevenueOrders = exportOrders.filter(o => {
+                const d = parseDateString(o.date);
+                if (isNaN(d)) return false;
+
+                if (cardFilter === 'today') {
+                    return d.toDateString() === now.toDateString();
+                } else if (cardFilter === 'week') {
+                    const onejan = new Date(d.getFullYear(), 0, 1);
+                    const weekD = Math.ceil((((d - onejan) / 86400000) + onejan.getDay() + 1) / 7);
+                    const weekNow = Math.ceil((((now - onejan) / 86400000) + onejan.getDay() + 1) / 7);
+                    return weekD === weekNow && d.getFullYear() === now.getFullYear();
+                } else if (cardFilter === 'month') {
+                    return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+                } else if (cardFilter === 'quarter') {
+                    const qD = Math.floor(d.getMonth() / 3);
+                    const qNow = Math.floor(now.getMonth() / 3);
+                    return qD === qNow && d.getFullYear() === now.getFullYear();
+                } else if (cardFilter === 'year') {
+                    return d.getFullYear() === now.getFullYear();
+                }
+                return true; // 'all'
+            });
+
+            const totalRevenue = filteredRevenueOrders.reduce((sum, h) => sum + h.total, 0);
 
             document.getElementById('dash-revenue').innerText = formatVND(totalRevenue);
             document.getElementById('dash-total-products').innerText = totalProducts;
@@ -710,14 +757,6 @@
 
             renderChart();
             renderRevenueChart();
-        }
-
-        function parseDateString(dateStr) {
-            try {
-                const parts = dateStr.split(',')[0].trim().split('/');
-                if (parts.length === 3) return new Date(`${parts[2]}-${parts[1]}-${parts[0]}`);
-            } catch(e) {}
-            return new Date(dateStr);
         }
 
         function renderRevenueChart() {
@@ -1081,6 +1120,7 @@
             showToast('Đã xóa danh mục!');
         }
 
+        // RENDER SẢN PHẨM NHỎ GỌN TRONG TẠO ĐƠN MỚI
         function renderPosProducts() {
             const search = document.getElementById('pos-search').value.toLowerCase();
             const selectedCat = document.getElementById('pos-category-filter').value;
@@ -1093,11 +1133,16 @@
                 return matchSearch && matchCat;
             });
 
-            grid.innerHTML = filtered.length === 0 ? `<p class="col-span-3 text-center text-xs text-slate-400 py-8">Không tìm thấy sản phẩm</p>` : filtered.map(p => `
-                <div class="bg-white p-4 rounded-xl border shadow-sm flex flex-col justify-between">
-                    <div><span class="text-xs text-slate-400">${p.code}</span><h4 class="font-bold text-sm line-clamp-2">${p.name}</h4><span class="text-[10px] bg-slate-100 px-2 py-0.5 rounded text-slate-600 mt-1 inline-block">${p.category}</span></div>
-                    <div class="mt-4 flex items-center justify-between"><span class="font-bold text-blue-600 text-sm">${formatVND(p.sellPrice)}</span>
-                    <button onclick="addToCart('${p.id}')" ${p.stock <= 0 ? 'disabled' : ''} class="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center hover:bg-blue-600 hover:text-white"><i class="fa-solid fa-plus text-xs"></i></button></div>
+            grid.innerHTML = filtered.length === 0 ? `<p class="col-span-4 text-center text-xs text-slate-400 py-8">Không tìm thấy sản phẩm</p>` : filtered.map(p => `
+                <div class="bg-white p-2.5 rounded-lg border shadow-sm flex flex-col justify-between hover:border-blue-300 transition-all">
+                    <div>
+                        <div class="flex justify-between items-start"><span class="text-[10px] text-slate-400 font-mono">${p.code}</span><span class="text-[9px] bg-slate-100 px-1.5 py-0.5 rounded text-slate-600 truncate max-w-[70px]">${p.category}</span></div>
+                        <h4 class="font-semibold text-xs line-clamp-2 mt-1 text-slate-800" title="${p.name}">${p.name}</h4>
+                    </div>
+                    <div class="mt-2.5 pt-2 border-t border-slate-100 flex items-center justify-between">
+                        <span class="font-bold text-blue-600 text-xs">${formatVND(p.sellPrice)}</span>
+                        <button onclick="addToCart('${p.id}')" ${p.stock <= 0 ? 'disabled' : ''} class="w-6 h-6 rounded bg-blue-50 text-blue-600 flex items-center justify-center hover:bg-blue-600 hover:text-white disabled:opacity-40"><i class="fa-solid fa-plus text-[10px]"></i></button>
+                    </div>
                 </div>
             `).join('');
         }
@@ -1114,11 +1159,18 @@
         function renderCart() {
             const container = document.getElementById('cart-items');
             if (!container) return;
-            if (cart.length === 0) { container.innerHTML = `<p class="text-xs text-slate-400 text-center py-8">Giỏ hàng trống</p>`; document.getElementById('cart-total-price').innerText = '0 ₫'; return; }
+            if (cart.length === 0) { container.innerHTML = `<p class="text-xs text-slate-400 text-center py-6">Giỏ hàng trống</p>`; document.getElementById('cart-total-price').innerText = '0 ₫'; return; }
             let total = 0, qty = 0;
             container.innerHTML = cart.map(item => {
                 total += item.qty * item.price; qty += item.qty;
-                return `<div class="py-2 flex justify-between text-xs"><div><p class="font-semibold">${item.name}</p><p>${formatVND(item.price)}</p></div><div class="flex items-center gap-1"><button onclick="item.qty--; if(item.qty<=0) cart=cart.filter(i=>i.id!='${item.id}'); renderCart();" class="w-6 bg-slate-100 rounded">-</button><span class="w-6 text-center font-bold">${item.qty}</span><button onclick="item.qty++; renderCart();" class="w-6 bg-slate-100 rounded">+</button></div></div>`;
+                return `<div class="py-1.5 flex justify-between text-xs items-center">
+                    <div class="truncate pr-2"><p class="font-semibold truncate">${item.name}</p><p class="text-[11px] text-slate-500">${formatVND(item.price)}</p></div>
+                    <div class="flex items-center gap-1 shrink-0">
+                        <button onclick="item.qty--; if(item.qty<=0) cart=cart.filter(i=>i.id!='${item.id}'); renderCart();" class="w-5 h-5 bg-slate-100 rounded text-slate-700 font-bold">-</button>
+                        <span class="w-5 text-center font-bold text-xs">${item.qty}</span>
+                        <button onclick="item.qty++; renderCart();" class="w-5 h-5 bg-slate-100 rounded text-slate-700 font-bold">+</button>
+                    </div>
+                </div>`;
             }).join('');
             document.getElementById('cart-total-qty').innerText = qty;
             document.getElementById('cart-total-price').innerText = formatVND(total);
@@ -1144,7 +1196,6 @@
 
         function closeInvoiceModal() { document.getElementById('invoice-modal').classList.add('hidden'); }
 
-        // --- RENDER LỊCH SỬ NHẬP KHO RIÊNG BIỆT ---
         window.renderImportHistory = function() {
             const tbody = document.getElementById('import-history-table-body');
             if (!tbody) return;
@@ -1161,7 +1212,6 @@
             `).join('');
         };
 
-        // --- RENDER LỊCH SỬ XUẤT KHO RIÊNG BIỆT ---
         window.renderExportHistory = function() {
             const tbody = document.getElementById('export-history-table-body');
             if (!tbody) return;
