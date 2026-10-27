@@ -68,7 +68,7 @@
             </nav>
         </div>
         <div class="p-4 border-t border-slate-800 text-xs text-slate-500 flex items-center justify-between">
-            <span>Phiên bản v2.3</span>
+            <span>Phiên bản v2.4</span>
             <span id="cloud-status-dot" class="inline-block w-2 h-2 rounded-full bg-amber-500" title="Đang kết nối..."></span>
         </div>
     </aside>
@@ -385,10 +385,9 @@
                 </div>
             </section>
 
-        <!-- TAB 5: EXPORT / SALE (POS) -->
+            <!-- TAB 5: EXPORT / SALE (POS - Tối ưu giao diện Mobile) -->
             <section id="tab-export" class="tab-content hidden space-y-6">
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    <!-- Cột danh sách sản phẩm -->
                     <div class="lg:col-span-2 space-y-4">
                         <div class="bg-white p-3 rounded-xl border border-slate-200 shadow-sm flex flex-col sm:flex-row gap-3 items-center">
                             <div class="relative flex-1 w-full">
@@ -401,11 +400,9 @@
                                 </select>
                             </div>
                         </div>
-                        <!-- Lưới sản phẩm (Tối ưu hiển thị trên điện thoại và máy tính) -->
                         <div id="pos-product-grid" class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 max-h-[400px] lg:max-h-[calc(100vh-260px)] overflow-y-auto pr-1"></div>
                     </div>
 
-                    <!-- Cột giỏ hàng & nút thanh toán (Hiển thị mượt mà trên mobile, không bị che khuất) -->
                     <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between">
                         <div>
                             <div class="border-b pb-2.5 mb-2.5 flex justify-between items-center">
@@ -480,6 +477,23 @@
             </section>
 
         </main>
+    </div>
+
+    <!-- MODAL: CONFIRM DELETE (Modal Popup Xác Nhận) -->
+    <div id="confirm-modal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center hidden z-50 p-4">
+        <div class="bg-white rounded-xl shadow-xl w-full max-w-sm overflow-hidden p-6 space-y-4 text-center">
+            <div class="w-12 h-12 bg-rose-50 text-rose-600 rounded-full flex items-center justify-center mx-auto text-xl">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+            </div>
+            <div>
+                <h3 class="font-bold text-slate-800 text-lg">Xác nhận xóa</h3>
+                <p id="confirm-modal-msg" class="text-xs text-slate-500 mt-1">Bạn có chắc chắn muốn thực hiện thao tác này không?</p>
+            </div>
+            <div class="flex justify-center gap-3 pt-2">
+                <button onclick="closeConfirmModal()" class="flex-1 px-4 py-2 border rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-50">Hủy</button>
+                <button id="confirm-modal-btn" class="flex-1 px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-lg text-sm font-medium shadow-sm">Xóa</button>
+            </div>
+        </div>
     </div>
 
     <!-- MODAL: ADD / EDIT PRODUCT -->
@@ -637,6 +651,29 @@
         let currentPage = 1;
         const pageSize = 20;
 
+        // Xử lý Popup Xác Nhận Xóa
+        let deleteCallback = null;
+        function showConfirmModal(message, callback) {
+            const modal = document.getElementById('confirm-modal');
+            const msgEl = document.getElementById('confirm-modal-msg');
+            const btnEl = document.getElementById('confirm-modal-btn');
+            if (!modal) return;
+
+            msgEl.innerText = message;
+            deleteCallback = callback;
+            modal.classList.remove('hidden');
+
+            btnEl.onclick = function() {
+                if (typeof deleteCallback === 'function') deleteCallback();
+                closeConfirmModal();
+            };
+        }
+        function closeConfirmModal() {
+            const modal = document.getElementById('confirm-modal');
+            if (modal) modal.classList.add('hidden');
+            deleteCallback = null;
+        }
+
         function saveData() {
             if (typeof window.saveDataToCloud === 'function') window.saveDataToCloud();
             updateDashboard();
@@ -697,7 +734,6 @@
             select.value = currentVal;
         };
 
-        // --- KHẮC PHỤC LỖI category-filter-label & DROPDOWN DANH MỤC SẢN PHẨM ---
         window.renderCategoryCheckboxes = function() {
             const container = document.getElementById('category-checkboxes-list');
             if (!container) return;
@@ -1138,15 +1174,17 @@
         }
 
         function deleteCategory(catName) {
-            if (window.products.some(p => p.category === catName)) { showToast('Danh mục đang chứa sản phẩm!', 'error'); return; }
-            window.categories = window.categories.filter(c => c !== catName);
-            saveData();
-            renderCategories();
-            updateCategoryDropdowns();
-            updateChartDropdowns();
-            updatePosCategoryDropdown();
-            renderCategoryCheckboxes();
-            showToast('Đã xóa danh mục!');
+            if (window.products.some(p => p.category === catName)) { showToast('Danh mục đang chứa sản phẩm, không thể xóa!', 'error'); return; }
+            showConfirmModal(`Bạn có chắc chắn muốn xóa danh mục "${catName}" không?`, () => {
+                window.categories = window.categories.filter(c => c !== catName);
+                saveData();
+                renderCategories();
+                updateCategoryDropdowns();
+                updateChartDropdowns();
+                updatePosCategoryDropdown();
+                renderCategoryCheckboxes();
+                showToast('Đã xóa danh mục!');
+            });
         }
 
         function renderPosProducts() {
@@ -1184,7 +1222,6 @@
             renderCart();
         }
 
-        // Hỗ trợ nhập số lượng trực tiếp bằng bàn phím
         function updateCartQtyDirect(id, val) {
             const item = cart.find(i => i.id === id);
             if (!item) return;
@@ -1300,19 +1337,21 @@
         };
 
         function deleteTransaction(id) {
-            const idx = window.historyData.findIndex(h => h.id === id);
-            if (idx === -1) return;
-            const item = window.historyData[idx];
-            item.items.forEach(ci => {
-                const prod = window.products.find(p => p.id === ci.id);
-                if (prod) { if (item.type === 'EXPORT') prod.stock += ci.qty; else prod.stock = Math.max(0, prod.stock - ci.qty); }
+            showConfirmModal(`Bạn có chắc muốn xóa giao dịch ${id}? (Hệ thống sẽ tự động cập nhật lại số lượng tồn kho tương ứng)`, () => {
+                const idx = window.historyData.findIndex(h => h.id === id);
+                if (idx === -1) return;
+                const item = window.historyData[idx];
+                item.items.forEach(ci => {
+                    const prod = window.products.find(p => p.id === ci.id);
+                    if (prod) { if (item.type === 'EXPORT') prod.stock += ci.qty; else prod.stock = Math.max(0, prod.stock - ci.qty); }
+                });
+                window.historyData.splice(idx, 1);
+                saveData(); 
+                renderImportHistory(); 
+                renderExportHistory(); 
+                renderProducts(); 
+                showToast('Đã xóa giao dịch và cập nhật lại tồn kho!');
             });
-            window.historyData.splice(idx, 1);
-            saveData(); 
-            renderImportHistory(); 
-            renderExportHistory(); 
-            renderProducts(); 
-            showToast('Đã xóa giao dịch và cập nhật lại tồn kho!');
         }
 
         window.onload = function() { 
@@ -1337,19 +1376,48 @@
             if (!file) return;
             const reader = new FileReader();
             reader.onload = function(evt) {
-                const workbook = XLSX.read(new Uint8Array(evt.target.result), { type: 'array' });
-                const rows = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]], { defval: '' });
-                parsedExcelProducts = rows.map((r, i) => ({
-                    id: Date.now().toString() + '_' + i,
-                    code: String(r['Mã SP'] || r['code'] || `SP${i}`),
-                    name: String(r['Tên SP'] || r['name'] || ''),
-                    category: String(r['Danh Mục'] || r['category'] || window.categories[0]),
-                    importPrice: parseFloat(r['Giá Nhập'] || r['importPrice'] || 0),
-                    sellPrice: parseFloat(r['Giá Bán'] || r['sellPrice'] || 0),
-                    stock: parseInt(r['Tồn Kho'] || r['stock'] || 0),
-                    minStock: 5
-                })).filter(p => p.name);
-                document.getElementById('btn-import-excel').disabled = parsedExcelProducts.length === 0;
+                try {
+                    const workbook = XLSX.read(new Uint8Array(evt.target.result), { type: 'array' });
+                    const rows = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]], { defval: '' });
+                    
+                    if (rows.length === 0) {
+                        showToast('File Excel không có dữ liệu!', 'error');
+                        return;
+                    }
+
+                    parsedExcelProducts = rows.map((r, i) => {
+                        const code = String(r['Mã SP'] || r['Ma SP'] || r['code'] || r['Code'] || `SP${i + 1}`).trim();
+                        const name = String(r['Tên SP'] || r['Ten SP'] || r['name'] || r['Name'] || r['Tên sản phẩm'] || '').trim();
+                        const category = String(r['Danh Mục'] || r['Danh muc'] || r['category'] || r['Category'] || window.categories[0]).trim();
+                        
+                        const importPrice = parseFloat(r['Giá Nhập'] || r['Gia nhap'] || r['importPrice'] || r['ImportPrice'] || 0);
+                        const sellPrice = parseFloat(r['Giá Bán'] || r['Gia ban'] || r['sellPrice'] || r['SellPrice'] || 0);
+                        const stock = parseInt(r['Tồn Kho'] || r['Ton kho'] || r['stock'] || r['Stock'] || 0);
+
+                        return {
+                            id: Date.now().toString() + '_' + i,
+                            code: code,
+                            name: name,
+                            category: window.categories.includes(category) ? category : window.categories[0],
+                            importPrice: isNaN(importPrice) ? 0 : importPrice,
+                            sellPrice: isNaN(sellPrice) ? 0 : isNaN(importPrice) ? 0 : importPrice * 1.2,
+                            stock: isNaN(stock) ? 0 : stock,
+                            minStock: 5
+                        };
+                    }).filter(p => p.name !== '');
+
+                    const btnImport = document.getElementById('btn-import-excel');
+                    if (parsedExcelProducts.length > 0) {
+                        btnImport.disabled = false;
+                        showToast(`Đã đọc thành công ${parsedExcelProducts.length} sản phẩm từ file!`);
+                    } else {
+                        btnImport.disabled = true;
+                        showToast('Không tìm thấy dòng sản phẩm hợp lệ!', 'error');
+                    }
+                } catch (err) {
+                    console.error(err);
+                    showToast('Lỗi đọc file Excel!', 'error');
+                }
             };
             reader.readAsArrayBuffer(file);
         }
@@ -1377,8 +1445,9 @@
             renderProducts();
         }
         function onSearchOrFilterChange() { currentPage = 1; renderProducts(); }
-      function exportStockToExcel() {
-            // Lọc danh sách sản phẩm dựa theo checkbox danh mục đang được chọn ở bộ lọc
+
+        // Tải Excel chỉ theo các danh mục đang được tích chọn
+        function exportStockToExcel() {
             const filteredProds = window.products.filter(p => {
                 if (selectedCategoriesFilter.length === 0) return true;
                 if (selectedCategoriesFilter.includes('__NONE__')) return false;
@@ -1386,7 +1455,7 @@
             });
 
             if (filteredProds.length === 0) { 
-                showToast('Không có sản phẩm nào trong danh mục đã chọn để xuất Excel!', 'error'); 
+                showToast('Không có sản phẩm nào thuộc danh mục đã chọn!', 'error'); 
                 return; 
             }
 
@@ -1399,14 +1468,13 @@
                 "Giá Bán": p.sellPrice, 
                 "Tồn Kho": p.stock 
             })));
-            
+
             const workbook = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(workbook, worksheet, "Ton_Kho_Theo_Danh_Muc");
-            
-            // Đặt tên file đính kèm kèm theo thời gian xuất hiện tại
+            XLSX.utils.book_append_sheet(workbook, worksheet, "Ton_Kho");
             XLSX.writeFile(workbook, `Bao_Cao_Ton_Kho_Danh_Muc_${new Date().toISOString().split('T')[0]}.xlsx`);
-            showToast('Đã xuất Excel theo danh mục đã chọn thành công!');
+            showToast('Đã xuất Excel thành công!');
         }
+
         function openProductModal(isEdit = false) {
             document.getElementById('product-modal').classList.remove('hidden');
             const select = document.getElementById('prod-category');
@@ -1447,30 +1515,26 @@
             document.getElementById('prod-stock').value = p.stock;
             document.getElementById('prod-min-stock').value = p.minStock;
         }
+
         function deleteProduct(id) {
-            window.products = window.products.filter(p => String(p.id) !== String(id));
-            saveData(); renderProducts(); showToast('Đã xóa thành công!');
+            showConfirmModal('Bạn có chắc chắn muốn xóa sản phẩm này khỏi hệ thống không?', () => {
+                window.products = window.products.filter(p => String(p.id) !== String(id));
+                saveData(); renderProducts(); showToast('Đã xóa thành công!');
+            });
         }
-       function toggleSelectProduct(id, checked) {
+
+        function toggleSelectProduct(id, checked) {
             const strId = String(id);
-            if (checked) {
-                selectedProductIds.add(strId);
-            } else {
-                selectedProductIds.delete(strId);
-            }
+            if (checked) selectedProductIds.add(strId);
+            else selectedProductIds.delete(strId);
             
             const deleteBtn = document.getElementById('btn-delete-selected');
-            if (deleteBtn) {
-                deleteBtn.classList.toggle('hidden', selectedProductIds.size === 0);
-            }
+            if (deleteBtn) deleteBtn.classList.toggle('hidden', selectedProductIds.size === 0);
             const countEl = document.getElementById('selected-count');
-            if (countEl) {
-                countEl.innerText = selectedProductIds.size;
-            }
+            if (countEl) countEl.innerText = selectedProductIds.size;
         }
 
         function toggleSelectAllProducts(master) {
-            // Lấy danh sách sản phẩm đang hiển thị (sau khi đã lọc theo từ khóa và danh mục)
             const search = document.getElementById('product-search').value.toLowerCase();
             const filtered = window.products.filter(p => {
                 const matchSearch = p.name.toLowerCase().includes(search) || p.code.toLowerCase().includes(search);
@@ -1482,44 +1546,32 @@
                 return matchSearch && matchCategory;
             });
 
-            if (master.checked) {
-                filtered.forEach(p => selectedProductIds.add(String(p.id)));
-            } else {
-                filtered.forEach(p => selectedProductIds.delete(String(p.id)));
-            }
+            if (master.checked) filtered.forEach(p => selectedProductIds.add(String(p.id)));
+            else filtered.forEach(p => selectedProductIds.delete(String(p.id)));
 
             const deleteBtn = document.getElementById('btn-delete-selected');
-            if (deleteBtn) {
-                deleteBtn.classList.toggle('hidden', selectedProductIds.size === 0);
-            }
+            if (deleteBtn) deleteBtn.classList.toggle('hidden', selectedProductIds.size === 0);
             const countEl = document.getElementById('selected-count');
-            if (countEl) {
-                countEl.innerText = selectedProductIds.size;
-            }
-            
+            if (countEl) countEl.innerText = selectedProductIds.size;
             renderProducts();
         }
-       function deleteSelectedProducts() {
-            if (selectedProductIds.size === 0) return;
-            
-            // Xóa sản phẩm khỏi mảng chính
-            window.products = window.products.filter(p => !selectedProductIds.has(String(p.id)));
-            
-            // Reset lại danh sách chọn
-            selectedProductIds.clear();
-            
-            // Ẩn nút "Xóa đã chọn" ngay lập tức
-            const deleteBtn = document.getElementById('btn-delete-selected');
-            if (deleteBtn) deleteBtn.classList.add('hidden');
-            
-            // Reset luôn checkbox "Chọn tất cả" ở tiêu đề bảng
-            const selectAllMaster = document.getElementById('select-all-products');
-            if (selectAllMaster) selectAllMaster.checked = false;
 
-            saveData(); 
-            renderProducts(); 
-            showToast('Đã xóa các sản phẩm được chọn thành công!');
+        function deleteSelectedProducts() {
+            if (selectedProductIds.size === 0) return;
+            showConfirmModal(`Bạn có chắc chắn muốn xóa ${selectedProductIds.size} sản phẩm đã chọn không?`, () => {
+                window.products = window.products.filter(p => !selectedProductIds.has(String(p.id)));
+                selectedProductIds.clear();
+                
+                const deleteBtn = document.getElementById('btn-delete-selected');
+                if (deleteBtn) deleteBtn.classList.add('hidden');
+                
+                const selectAllMaster = document.getElementById('select-all-products');
+                if (selectAllMaster) selectAllMaster.checked = false;
+
+                saveData(); renderProducts(); showToast('Đã xóa các sản phẩm được chọn!');
+            });
         }
+
         function onImportSearchInput(q) {
             const list = document.getElementById('import-suggestions-list');
             const query = q.trim().toLowerCase();
