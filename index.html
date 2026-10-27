@@ -1385,23 +1385,39 @@
                         return;
                     }
 
+                    // Hàm phụ trợ để làm sạch chuỗi số (xóa dấu chấm, phẩy, chữ ₫, khoảng trắng...)
+                    const parseCleanNumber = (val) => {
+                        if (typeof val === 'number') return val;
+                        if (!val) return 0;
+                        // Chỉ giữ lại các chữ số và dấu trừ (nếu có)
+                        const cleaned = String(val).replace(/[^\d-]/g, '');
+                        const num = parseFloat(cleaned);
+                        return isNaN(num) ? 0 : num;
+                    };
+
                     parsedExcelProducts = rows.map((r, i) => {
                         const code = String(r['Mã SP'] || r['Ma SP'] || r['code'] || r['Code'] || `SP${i + 1}`).trim();
                         const name = String(r['Tên SP'] || r['Ten SP'] || r['name'] || r['Name'] || r['Tên sản phẩm'] || '').trim();
                         const category = String(r['Danh Mục'] || r['Danh muc'] || r['category'] || r['Category'] || window.categories[0]).trim();
                         
-                        const importPrice = parseFloat(r['Giá Nhập'] || r['Gia nhap'] || r['importPrice'] || r['ImportPrice'] || 0);
-                        const sellPrice = parseFloat(r['Giá Bán'] || r['Gia ban'] || r['sellPrice'] || r['SellPrice'] || 0);
-                        const stock = parseInt(r['Tồn Kho'] || r['Ton kho'] || r['stock'] || r['Stock'] || 0);
+                        // Áp dụng hàm làm sạch số cho Giá Nhập, Giá Bán, Tồn Kho
+                        const importPrice = parseCleanNumber(r['Giá Nhập'] || r['Gia nhap'] || r['importPrice'] || r['ImportPrice']);
+                        let sellPrice = parseCleanNumber(r['Giá Bán'] || r['Gia ban'] || r['sellPrice'] || r['SellPrice']);
+                        const stock = parseCleanNumber(r['Tồn Kho'] || r['Ton kho'] || r['stock'] || r['Stock']);
+
+                        // Nếu file Excel bỏ trống giá bán nhưng có giá nhập, tự động tính giá bán = giá nhập * 1.2 (+20%)
+                        if (sellPrice === 0 && importPrice > 0) {
+                            sellPrice = importPrice * 1.2;
+                        }
 
                         return {
                             id: Date.now().toString() + '_' + i,
                             code: code,
                             name: name,
                             category: window.categories.includes(category) ? category : window.categories[0],
-                            importPrice: isNaN(importPrice) ? 0 : importPrice,
-                            sellPrice: isNaN(sellPrice) ? 0 : isNaN(importPrice) ? 0 : importPrice * 1.2,
-                            stock: isNaN(stock) ? 0 : stock,
+                            importPrice: importPrice,
+                            sellPrice: sellPrice,
+                            stock: stock,
                             minStock: 5
                         };
                     }).filter(p => p.name !== '');
