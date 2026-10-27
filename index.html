@@ -1374,13 +1374,35 @@
             renderProducts();
         }
         function onSearchOrFilterChange() { currentPage = 1; renderProducts(); }
-        function exportStockToExcel() {
-            if (window.products.length === 0) { showToast('Trống dữ liệu!', 'error'); return; }
-            const worksheet = XLSX.utils.json_to_sheet(window.products.map((p, i) => ({ "STT": i + 1, "Mã SP": p.code, "Tên SP": p.name, "Danh Mục": p.category, "Giá Nhập": p.importPrice, "Giá Bán": p.sellPrice, "Tồn Kho": p.stock })));
+      function exportStockToExcel() {
+            // Lọc danh sách sản phẩm dựa theo checkbox danh mục đang được chọn ở bộ lọc
+            const filteredProds = window.products.filter(p => {
+                if (selectedCategoriesFilter.length === 0) return true;
+                if (selectedCategoriesFilter.includes('__NONE__')) return false;
+                return selectedCategoriesFilter.includes(p.category);
+            });
+
+            if (filteredProds.length === 0) { 
+                showToast('Không có sản phẩm nào trong danh mục đã chọn để xuất Excel!', 'error'); 
+                return; 
+            }
+
+            const worksheet = XLSX.utils.json_to_sheet(filteredProds.map((p, i) => ({ 
+                "STT": i + 1, 
+                "Mã SP": p.code, 
+                "Tên SP": p.name, 
+                "Danh Mục": p.category, 
+                "Giá Nhập": p.importPrice, 
+                "Giá Bán": p.sellPrice, 
+                "Tồn Kho": p.stock 
+            })));
+            
             const workbook = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(workbook, worksheet, "Ton_Kho");
-            XLSX.writeFile(workbook, `Bao_Cao_Ton_Kho_${new Date().toISOString().split('T')[0]}.xlsx`);
-            showToast('Đã xuất Excel thành công!');
+            XLSX.utils.book_append_sheet(workbook, worksheet, "Ton_Kho_Theo_Danh_Muc");
+            
+            // Đặt tên file đính kèm kèm theo thời gian xuất hiện tại
+            XLSX.writeFile(workbook, `Bao_Cao_Ton_Kho_Danh_Muc_${new Date().toISOString().split('T')[0]}.xlsx`);
+            showToast('Đã xuất Excel theo danh mục đã chọn thành công!');
         }
         function openProductModal(isEdit = false) {
             document.getElementById('product-modal').classList.remove('hidden');
