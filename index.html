@@ -1430,20 +1430,29 @@
             }
             renderCart();
         }
-
-        function renderCart() {
+function renderCart() {
             const container = document.getElementById('cart-items');
             if (!container) return;
-            if (cart.length === 0) { container.innerHTML = `<p class="text-xs text-slate-400 text-center py-6">Giỏ hàng trống</p>`; document.getElementById('cart-total-price').innerText = '0 ₫'; return; }
+            if (cart.length === 0) { 
+                container.innerHTML = `<p class="text-xs text-slate-400 text-center py-6">Giỏ hàng trống</p>`; 
+                document.getElementById('cart-total-price').innerText = '0 ₫'; 
+                return; 
+            }
             let total = 0, qty = 0;
             container.innerHTML = cart.map(item => {
-                total += item.qty * item.price; qty += item.qty;
-                return `<div class="py-1.5 flex justify-between text-xs items-center">
-                    <div class="truncate pr-2"><p class="font-semibold truncate">${item.name}</p><p class="text-[11px] text-slate-500">${formatVND(item.price)}</p></div>
-                    <div class="flex items-center gap-1 shrink-0">
-                        <button onclick="updateCartQty('${item.id}', -1)" class="w-5 h-5 bg-slate-100 rounded text-slate-700 font-bold">-</button>
-                        <input type="number" min="1" value="${item.qty}" onchange="updateCartQtyDirect('${item.id}', this.value)" class="w-10 text-center font-bold text-xs border rounded p-0.5 outline-none">
-                        <button onclick="updateCartQty('${item.id}', 1)" class="w-5 h-5 bg-slate-100 rounded text-slate-700 font-bold">+</button>
+                total += item.qty * item.price; 
+                qty += item.qty;
+                return `<div class="py-2.5 flex justify-between text-xs items-center">
+                    <div class="truncate pr-2"><p class="font-semibold truncate text-sm">${item.name}</p><p class="text-xs text-slate-500">${formatVND(item.price)}</p></div>
+                    <div class="flex items-center gap-2 shrink-0">
+                        <!-- Nút trừ (-): làm to gấp 2 lần (w-9 h-9) -->
+                        <button onclick="updateCartQty('${item.id}', -1)" class="w-9 h-9 bg-slate-100 hover:bg-slate-200 rounded-lg text-slate-700 font-bold text-base flex items-center justify-center transition-all">-</button>
+                        
+                        <!-- Ô nhập số lượng: làm to rộng và cao hơn gấp 2 lần (w-16, p-1.5) -->
+                        <input type="number" min="1" value="${item.qty}" onchange="updateCartQtyDirect('${item.id}', this.value)" class="w-16 text-center font-bold text-sm border rounded-lg p-1.5 outline-none focus:ring-2 focus:ring-blue-500">
+                        
+                        <!-- Nút cộng (+): làm to gấp 2 lần (w-9 h-9) -->
+                        <button onclick="updateCartQty('${item.id}', 1)" class="w-9 h-9 bg-blue-50 hover:bg-blue-100 text-blue-600 rounded-lg font-bold text-base flex items-center justify-center transition-all">+</button>
                     </div>
                 </div>`;
             }).join('');
