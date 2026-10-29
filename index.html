@@ -1355,8 +1355,7 @@
             });
         }
 
-        // TẠO ĐƠN MỚI (POS)
-        // TẠO ĐƠN MỚI (POS): CLICK VÀO BẤT KỲ VỊ TRÍ NÀO TRÊN THẺ SẢN PHẨM ĐỂ THÊM VÀO GIỎ HÀNG
+       // TẠO ĐƠN MỚI (POS): CLICK VÀO BẤT KỲ VỊ TRÍ NÀO TRÊN THẺ SẢN PHẨM ĐỂ THÊM VÀO GIỎ HÀNG
         function renderPosProducts() {
             const search = document.getElementById('pos-search').value.toLowerCase();
             const selectedCat = document.getElementById('pos-category-filter').value;
@@ -1387,26 +1386,6 @@
                         <button onclick="event.stopPropagation(); addToCart('${p.id}')" ${p.stock <= 0 ? 'disabled' : ''} class="w-7 h-7 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center hover:bg-blue-600 hover:text-white disabled:opacity-40 transition-all">
                             <i class="fa-solid fa-plus text-xs"></i>
                         </button>
-                    </div>
-                </div>
-            `).join('');
-        }
-
-            grid.innerHTML = filtered.length === 0 ? `<p class="col-span-4 text-center text-xs text-slate-400 py-8">Không tìm thấy sản phẩm</p>` : filtered.map(p => `
-                <div class="bg-white p-2.5 rounded-lg border shadow-sm flex flex-col justify-between hover:border-blue-300 transition-all">
-                    <div>
-                        <div class="flex justify-between items-start">
-                            <span class="text-[10px] text-slate-400 font-mono">${p.code}</span>
-                            <div class="flex flex-col items-end gap-1">
-                                <span class="text-[9px] bg-slate-100 px-1.5 py-0.5 rounded text-slate-600 truncate max-w-[70px]">${p.category}</span>
-                                <span class="text-[9px] font-semibold px-1.5 py-0.5 rounded ${p.stock <= (p.minStock || 5) ? 'bg-rose-100 text-rose-700' : 'bg-emerald-100 text-emerald-700'}">Tồn: ${p.stock}</span>
-                            </div>
-                        </div>
-                        <h4 class="font-semibold text-xs line-clamp-2 mt-1 text-slate-800" title="${p.name}">${p.name}</h4>
-                    </div>
-                    <div class="mt-2.5 pt-2 border-t border-slate-100 flex items-center justify-between">
-                        <span class="font-bold text-blue-600 text-xs">${formatVND(p.sellPrice)}</span>
-                        <button onclick="addToCart('${p.id}')" ${p.stock <= 0 ? 'disabled' : ''} class="w-6 h-6 rounded bg-blue-50 text-blue-600 flex items-center justify-center hover:bg-blue-600 hover:text-white disabled:opacity-40"><i class="fa-solid fa-plus text-[10px]"></i></button>
                     </div>
                 </div>
             `).join('');
