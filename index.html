@@ -15,6 +15,8 @@
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
     <!-- SheetJS (xlsx) Library for Excel Import/Export -->
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <!-- ExcelJS: Xuất Excel có màu sắc & định dạng nâng cao -->
+    <script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
         body { font-family: 'Inter', sans-serif; }
@@ -99,7 +101,7 @@
             </nav>
         </div>
         <div class="p-4 border-t border-slate-800 text-xs text-slate-500 flex items-center justify-between">
-            <span>Phiên bản v3.2</span>
+            <span>Phiên bản v3.2 Pro</span>
             <span class="flex items-center gap-1.5"><span id="cloud-status-text" class="text-[10px]">Đang kết nối...</span><span id="cloud-status-dot" class="inline-block w-2 h-2 rounded-full bg-amber-500" title="Đang kết nối..."></span></span>
         </div>
     </aside>
@@ -415,7 +417,7 @@
                 </div>
             </section>
 
-            <!-- TAB 4: IMPORT (ĐÃ CÓ CHỌN DANH MỤC TRƯỚC KHI TÌM KIẾM) -->
+            <!-- TAB 4: IMPORT (CÓ CHỌN DANH MỤC TRƯỚC KHI TÌM KIẾM) -->
             <section id="tab-import" class="tab-content hidden space-y-6">
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     <div class="lg:col-span-2 bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-4">
@@ -426,7 +428,6 @@
                         <div class="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-3 relative">
                             <label class="block text-xs font-semibold text-slate-600 uppercase">Chọn danh mục & Tìm kiếm sản phẩm</label>
                             
-                            <!-- BỔ SUNG: CHỌN DANH MỤC TRƯỚC KHI NHẬP TỪ KHÓA TÌM KIẾM -->
                             <div class="flex flex-col sm:flex-row gap-3 relative">
                                 <div class="w-full sm:w-56">
                                     <select id="import-category-select" onchange="onImportCategoryChange()" class="w-full bg-white border border-slate-300 rounded-lg p-2.5 text-sm text-slate-700 outline-none focus:ring-2 focus:ring-emerald-500 font-medium">
@@ -675,16 +676,34 @@
         </div>
     </div>
 
-    <!-- MODAL: INVOICE -->
+    <!-- MODAL: INVOICE (ĐÃ ĐƯỢC BỔ SUNG inv-total-price ĐỂ SỬA LỖI null) -->
     <div id="invoice-modal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center hidden z-50 p-4">
         <div class="bg-white rounded-xl shadow-xl w-full max-w-lg max-h-[92dvh] overflow-y-auto p-4 sm:p-6 space-y-4">
             <div id="invoice-print-area" class="space-y-4 text-slate-800">
-                <div class="text-center border-b pb-4"><h2 class="font-bold text-xl uppercase">Hóa Đơn Bán Hàng</h2><p class="text-xs text-slate-500 mt-1" id="inv-date"></p><p class="text-xs text-slate-500">Mã: <span id="inv-code" class="font-semibold"></span></p></div>
-                <div class="text-xs space-y-1"><p>Khách hàng: <span id="inv-customer" class="font-medium"></span></p></div>
+                <div class="text-center border-b pb-4">
+                    <h2 class="font-bold text-xl uppercase">Hóa Đơn Bán Hàng</h2>
+                    <p class="text-xs text-slate-500 mt-1" id="inv-date"></p>
+                    <p class="text-xs text-slate-500">Mã: <span id="inv-code" class="font-semibold"></span></p>
+                </div>
+                <div class="text-xs space-y-1">
+                    <p>Khách hàng: <span id="inv-customer" class="font-medium"></span></p>
+                </div>
                 <table class="w-full text-xs text-left border-collapse">
-                    <thead><tr class="border-b border-t"><th class="py-2">Tên SP</th><th class="py-2 text-center">SL</th><th class="py-2 text-right">Đơn giá</th><th class="py-2 text-right">Thành tiền</th></tr></thead>
+                    <thead>
+                        <tr class="border-b border-t">
+                            <th class="py-2">Tên SP</th>
+                            <th class="py-2 text-center">SL</th>
+                            <th class="py-2 text-right">Đơn giá</th>
+                            <th class="py-2 text-right">Thành tiền</th>
+                        </tr>
+                    </thead>
                     <tbody id="inv-items-body" class="divide-y divide-slate-100"></tbody>
                 </table>
+                <!-- BỔ SUNG KHỐI TỔNG CỘNG TIỀN VÀO ĐÂY ĐỂ SỬA LỖI CANNOT SET PROPERTIES OF NULL -->
+                <div class="flex justify-between items-center font-bold text-sm pt-3 border-t">
+                    <span>Tổng thanh toán:</span>
+                    <span id="inv-total-price" class="text-blue-600 text-base">0 ₫</span>
+                </div>
                 <div id="inv-pagination-container" class="pt-2 flex justify-between items-center text-xs text-slate-500 border-t mt-2">
                     <span id="inv-pagination-info">Hiển thị 0 - 0</span>
                     <div id="inv-pagination-controls" class="flex items-center space-x-1"></div>
@@ -745,10 +764,6 @@
                 const data = snap.val();
                 window.categories = data ? (Array.isArray(data) ? data.filter(Boolean) : Object.values(data).filter(Boolean)) : ['Điện thoại', 'Laptop', 'Phụ kiện', 'Gia dụng'];
                 if (typeof window.updateCategoryDropdowns === 'function') window.updateCategoryDropdowns();
-                if (typeof window.updateChartDropdowns === 'function') window.updateChartDropdowns();
-                if (typeof window.updatePosCategoryDropdown === 'function') window.updatePosCategoryDropdown();
-                if (typeof window.updateImportCategoryDropdown === 'function') window.updateImportCategoryDropdown();
-                if (typeof window.renderCategoryCheckboxes === 'function') window.renderCategoryCheckboxes();
                 if (!document.getElementById('tab-categories').classList.contains('hidden')) window.renderCategories();
             });
             listen('kho_hang/products', (snap) => {
@@ -823,6 +838,14 @@
         let currentInvoiceOrder = null;
         let invoiceCurrentPage = 1;
         const invoicePageSize = 10;
+
+        // BỔ SUNG HÀM GOM CẬP NHẬT TẤT CẢ DROPDOWN DANH MỤC ĐỂ SỬA LỖI REFERENCEERROR
+        window.updateCategoryDropdowns = function() {
+            if (typeof updatePosCategoryDropdown === 'function') updatePosCategoryDropdown();
+            if (typeof updateImportCategoryDropdown === 'function') updateImportCategoryDropdown();
+            if (typeof renderCategoryCheckboxes === 'function') renderCategoryCheckboxes();
+            if (typeof updateChartDropdowns === 'function') updateChartDropdowns();
+        };
 
         function goToCatPage(page) {
             catInventoryPage = page;
@@ -1442,10 +1465,6 @@
             saveData();
             renderCategories();
             updateCategoryDropdowns();
-            updateChartDropdowns();
-            updatePosCategoryDropdown();
-            updateImportCategoryDropdown();
-            renderCategoryCheckboxes();
             showToast('Thêm danh mục thành công!');
         }
 
@@ -1456,10 +1475,6 @@
                 saveData();
                 renderCategories();
                 updateCategoryDropdowns();
-                updateChartDropdowns();
-                updatePosCategoryDropdown();
-                updateImportCategoryDropdown();
-                renderCategoryCheckboxes();
                 showToast('Đã xóa danh mục!');
             });
         }
@@ -1665,7 +1680,10 @@
             document.getElementById('inv-code').innerText = currentInvoiceOrder.id;
             document.getElementById('inv-date').innerText = currentInvoiceOrder.date;
             document.getElementById('inv-customer').innerText = currentInvoiceOrder.partner;
-            document.getElementById('inv-total-price').innerText = formatVND(currentInvoiceOrder.total);
+            
+            // GÁN GIÁ TRỊ VÀO PHẦN TỬ THẺ ĐÃ ĐƯỢC BỔ SUNG TRONG MODAL HÓA ĐƠN
+            const invTotalEl = document.getElementById('inv-total-price');
+            if (invTotalEl) invTotalEl.innerText = formatVND(currentInvoiceOrder.total);
 
             invoiceCurrentPage = 1;
             renderInvoiceItems();
@@ -1873,9 +1891,7 @@
 
         window.onload = function() { 
             updateDashboard(); 
-            updatePosCategoryDropdown(); 
-            updateImportCategoryDropdown();
-            renderCategoryCheckboxes();
+            updateCategoryDropdowns();
 
             document.getElementById('mobile-menu-btn')?.addEventListener('click', openSidebar);
             initResponsiveUI();
@@ -1979,8 +1995,43 @@
         }
         function onSearchOrFilterChange() { currentPage = 1; renderProducts(); }
 
-        // EXPORT STOCK TO EXCEL
-        function exportStockToExcel() {
+        // =========================================================================
+        // HELPER XUẤT EXCEL CAO CẤP VỚI EXCELJS (Có định dạng & màu sắc)
+        // =========================================================================
+        const ROW_COLORS = ['FFF2F2F2', 'FFF8CBAD'];
+        const CAT_ACCENTS = ['FF1E40AF', 'FF047857', 'FFB45309', 'FF7E22CE', 'FFBE123C', 'FF0E7490'];
+        const XL_LINE = { style: 'thin', color: { argb: 'FFCBD5E1' } };
+        const XL_BORDER = { top: XL_LINE, left: XL_LINE, bottom: XL_LINE, right: XL_LINE };
+        const XL_WHITE = { bold: true, color: { argb: 'FFFFFFFF' } };
+        const XL_MONEY = '#,##0" ₫"', XL_INT = '#,##0';
+        const xlFill = argb => ({ type: 'pattern', pattern: 'solid', fgColor: { argb } });
+
+        function xlPaintRow(row, ncol, argb, font, aligns) {
+            for (let c = 1; c <= ncol; c++) {
+                const cell = row.getCell(c);
+                cell.fill = xlFill(argb);
+                cell.border = XL_BORDER;
+                cell.font = Object.assign({ name: 'Arial', size: 10, color: { argb: 'FF1E293B' } }, font || {});
+                cell.alignment = { vertical: 'middle', horizontal: (aligns && aligns[c - 1]) || 'left' };
+            }
+        }
+        function xlTitle(ws, text, ncol, argb, size, height) {
+            const row = ws.addRow([text]);
+            ws.mergeCells(row.number, 1, row.number, ncol);
+            xlPaintRow(row, ncol, argb, { ...XL_WHITE, size }, []);
+            row.height = height;
+        }
+        async function xlDownload(wb, fileName) {
+            const buf = await wb.xlsx.writeBuffer();
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }));
+            a.download = fileName;
+            document.body.appendChild(a); a.click(); a.remove();
+            setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+        }
+
+        // 1. XUẤT EXCEL TỒN KHO VỚI MÀU SẮC PHÂN LOẠI CỦA EXCELJS
+        async function exportStockToExcel() {
             const search = document.getElementById('product-search').value.toLowerCase();
             const stockOp = document.getElementById('stock-filter-op')?.value || 'all';
             const stockValRaw = document.getElementById('stock-filter-val')?.value;
@@ -2011,241 +2062,115 @@
                 return; 
             }
 
-            const groupedByCategory = {};
-            filteredProds.forEach(p => {
-                const cat = p.category || 'Khác';
-                if (!groupedByCategory[cat]) groupedByCategory[cat] = [];
-                groupedByCategory[cat].push(p);
-            });
+            if (typeof ExcelJS === 'undefined') { showToast('Chưa tải được thư viện xuất Excel (ExcelJS). Kiểm tra kết nối mạng!', 'error'); return; }
 
-            const excelRows = [];
-            excelRows.push(["BÁO CÁO TỒN KHO VÀ SẢN PHẨM THEO DANH MỤC"]);
-            excelRows.push(["Thời gian xuất:", new Date().toLocaleString('vi-VN')]);
-            excelRows.push([]);
+            const grouped = {};
+            filteredProds.forEach(p => { const c = p.category || 'Khác'; (grouped[c] = grouped[c] || []).push(p); });
 
-            let stt = 1;
-            let grandTotalStock = 0;
-            let grandTotalValue = 0;
+            const NC = 8;
+            const ALIGN = ['center', 'left', 'left', 'left', 'right', 'right', 'center', 'right'];
+            const wb = new ExcelJS.Workbook();
+            const ws = wb.addWorksheet('Ton_Kho', { views: [{ state: 'frozen', ySplit: 3, showGridLines: false }] });
+            ws.columns = [6, 14, 36, 18, 18, 18, 12, 22].map(width => ({ width }));
+            ws.pageSetup = { orientation: 'landscape', fitToPage: true, fitToWidth: 1, fitToHeight: 0 };
 
-            const catHeaderRowIndices = [];
-            const colHeaderRowIndices = [];
-            const productRowInfo = [];
-            const catSummaryRowIndices = [];
-            let totalSummaryRowIndex = -1;
+            xlTitle(ws, 'BÁO CÁO TỒN KHO VÀ SẢN PHẨM THEO DANH MỤC', NC, 'FF0F172A', 16, 34);
+            const info = ws.addRow([`Thời gian xuất: ${new Date().toLocaleString('vi-VN')}   |   Số tồn chữ đỏ = dưới ngưỡng báo hết`]);
+            ws.mergeCells(info.number, 1, info.number, NC);
+            info.getCell(1).font = { name: 'Arial', size: 10, italic: true, color: { argb: 'FF64748B' } };
+            ws.addRow([]);
 
-            Object.keys(groupedByCategory).forEach(catName => {
-                const productsInCat = groupedByCategory[catName];
+            let stt = 1, rowIdx = 0, catIdx = 0, grandStock = 0, grandValue = 0;
+            const subRows = [];
 
-                catHeaderRowIndices.push(excelRows.length);
-                excelRows.push([`DANH MỤC: ${catName.toUpperCase()}`, "", "", "", "", "", "", ""]);
+            Object.keys(grouped).forEach(catName => {
+                const list = grouped[catName];
+                const accent = CAT_ACCENTS[catIdx++ % CAT_ACCENTS.length];
 
-                colHeaderRowIndices.push(excelRows.length);
-                excelRows.push(["STT", "Mã SP", "Tên Sản Phẩm", "Danh Mục", "Giá Nhập (₫)", "Giá Bán (₫)", "Tồn Kho", "Tổng Giá Trị (₫)"]);
+                const banner = ws.addRow([`DANH MỤC: ${catName.toUpperCase()}  (${list.length} sản phẩm)`]);
+                ws.mergeCells(banner.number, 1, banner.number, NC);
+                xlPaintRow(banner, NC, accent, { ...XL_WHITE, size: 12 }, []);
+                banner.height = 24;
 
-                let catTotalStock = 0;
-                let catTotalValue = 0;
+                const head = ws.addRow(['STT', 'Mã SP', 'Tên Sản Phẩm', 'Danh Mục', 'Giá Nhập (₫)', 'Giá Bán (₫)', 'Tồn Kho', 'Tổng Giá Trị (₫)']);
+                xlPaintRow(head, NC, accent, XL_WHITE, ALIGN.map(() => 'center'));
+                head.height = 22;
 
-                productsInCat.forEach((p, idx) => {
-                    const totalVal = (Number(p.stock) || 0) * (Number(p.sellPrice) || 0);
-                    catTotalStock += Number(p.stock) || 0;
-                    catTotalValue += totalVal;
-
-                    productRowInfo.push({ rowIndex: excelRows.length, isEven: idx % 2 === 1 });
-
-                    excelRows.push([
-                        stt++,
-                        p.code,
-                        p.name,
-                        p.category,
-                        Number(p.importPrice) || 0,
-                        Number(p.sellPrice) || 0,
-                        Number(p.stock) || 0,
-                        totalVal
-                    ]);
+                let catStock = 0, catValue = 0, first = head.number + 1, last = head.number;
+                list.forEach(p => {
+                    const stock = Number(p.stock) || 0, sell = Number(p.sellPrice) || 0, val = stock * sell;
+                    catStock += stock; catValue += val;
+                    const r = ws.addRow([stt++, p.code, p.name, p.category, Number(p.importPrice) || 0, sell, stock]);
+                    r.getCell(8).value = { formula: `F${r.number}*G${r.number}`, result: val };
+                    xlPaintRow(r, NC, ROW_COLORS[rowIdx++ % ROW_COLORS.length], null, ALIGN);
+                    [5, 6, 8].forEach(c => r.getCell(c).numFmt = XL_MONEY);
+                    r.getCell(7).numFmt = XL_INT;
+                    if (stock <= (Number(p.minStock) || 0)) r.getCell(7).font = { name: 'Arial', size: 10, bold: true, color: { argb: 'FFB91C1C' } };
+                    r.height = 20;
+                    last = r.number;
                 });
 
-                grandTotalStock += catTotalStock;
-                grandTotalValue += catTotalValue;
-
-                catSummaryRowIndices.push(excelRows.length);
-                excelRows.push(["", "", `Tổng cộng danh mục [${catName}]`, "", "", "", catTotalStock, catTotalValue]);
-                excelRows.push([]);
+                const sub = ws.addRow(['', '', `Tổng cộng danh mục [${catName}]`, '', '', '', null, null]);
+                sub.getCell(7).value = { formula: `SUM(G${first}:G${last})`, result: catStock };
+                sub.getCell(8).value = { formula: `SUM(H${first}:H${last})`, result: catValue };
+                xlPaintRow(sub, NC, 'FFE2E8F0', { bold: true }, ALIGN);
+                sub.getCell(7).numFmt = XL_INT; sub.getCell(8).numFmt = XL_MONEY;
+                sub.height = 22;
+                subRows.push(sub.number);
+                grandStock += catStock; grandValue += catValue;
+                ws.addRow([]);
             });
 
-            totalSummaryRowIndex = excelRows.length;
-            excelRows.push(["", "", "TỔNG CỘNG TOÀN BỘ BÁO CÁO", "", "", "", grandTotalStock, grandTotalValue]);
+            const total = ws.addRow(['', '', 'TỔNG CỘNG TOÀN BỘ BÁO CÁO', '', '', '', null, null]);
+            total.getCell(7).value = { formula: `SUM(${subRows.map(n => 'G' + n).join(',')})`, result: grandStock };
+            total.getCell(8).value = { formula: `SUM(${subRows.map(n => 'H' + n).join(',')})`, result: grandValue };
+            xlPaintRow(total, NC, 'FF0F172A', { ...XL_WHITE, size: 11 }, ALIGN);
+            total.getCell(7).numFmt = XL_INT; total.getCell(8).numFmt = XL_MONEY;
+            total.height = 26;
 
-            const worksheet = XLSX.utils.aoa_to_sheet(excelRows);
-
-            worksheet['!cols'] = [
-                { wch: 6 }, { wch: 15 }, { wch: 35 }, { wch: 18 },
-                { wch: 18 }, { wch: 18 }, { wch: 12 }, { wch: 22 }
-            ];
-
-            const range = XLSX.utils.decode_range(worksheet['!ref']);
-            const thinBorder = {
-                top: { style: "thin", color: { rgb: "E2E8F0" } },
-                bottom: { style: "thin", color: { rgb: "E2E8F0" } },
-                left: { style: "thin", color: { rgb: "E2E8F0" } },
-                right: { style: "thin", color: { rgb: "E2E8F0" } }
-            };
-
-            if (worksheet['A1']) worksheet['A1'].s = { font: { bold: true, sz: 14, color: { rgb: "1E3A8A" } } };
-
-            catHeaderRowIndices.forEach(R => {
-                for (let C = 0; C <= 7; ++C) {
-                    const cellRef = XLSX.utils.encode_cell({ r: R, c: C });
-                    if (!worksheet[cellRef]) worksheet[cellRef] = { v: "" };
-                    worksheet[cellRef].s = {
-                        fill: { fgColor: { rgb: "0F172A" } },
-                        font: { bold: true, color: { rgb: "FFFFFF" }, sz: 11 },
-                        alignment: { vertical: "center", horizontal: "left" }
-                    };
-                }
-            });
-
-            colHeaderRowIndices.forEach(R => {
-                for (let C = 0; C <= 7; ++C) {
-                    const cellRef = XLSX.utils.encode_cell({ r: R, c: C });
-                    if (worksheet[cellRef]) {
-                        worksheet[cellRef].s = {
-                            fill: { fgColor: { rgb: "334155" } },
-                            font: { bold: true, color: { rgb: "FFFFFF" }, sz: 10 },
-                            alignment: { vertical: "center", horizontal: C === 0 || C === 6 ? "center" : (C >= 4 ? "right" : "left") },
-                            border: thinBorder
-                        };
-                    }
-                }
-            });
-
-            productRowInfo.forEach(item => {
-                const R = item.rowIndex;
-                const bgRGB = item.isEven ? "F8FAFC" : "FFFFFF";
-                for (let C = 0; C <= 7; ++C) {
-                    const cellRef = XLSX.utils.encode_cell({ r: R, c: C });
-                    if (worksheet[cellRef]) {
-                        worksheet[cellRef].s = {
-                            fill: { fgColor: { rgb: bgRGB } },
-                            font: { sz: 10, color: { rgb: "1E293B" } },
-                            alignment: { vertical: "center", horizontal: C === 0 || C === 6 ? "center" : (C >= 4 ? "right" : "left") },
-                            border: thinBorder
-                        };
-                        if (C === 4 || C === 5 || C === 7) worksheet[cellRef].z = '#,##0" ₫"';
-                        if (C === 6) worksheet[cellRef].z = '#,##0';
-                    }
-                }
-            });
-
-            catSummaryRowIndices.forEach(R => {
-                for (let C = 0; C <= 7; ++C) {
-                    const cellRef = XLSX.utils.encode_cell({ r: R, c: C });
-                    if (!worksheet[cellRef]) worksheet[cellRef] = { v: "" };
-                    worksheet[cellRef].s = {
-                        fill: { fgColor: { rgb: "F1F5F9" } },
-                        font: { bold: true, color: { rgb: "0F172A" }, sz: 10 },
-                        alignment: { vertical: "center", horizontal: C >= 6 ? "right" : "left" },
-                        border: { top: { style: "thin", color: { rgb: "94A3B8" } }, bottom: { style: "thin", color: { rgb: "94A3B8" } } }
-                    };
-                    if (C === 6) worksheet[cellRef].z = '#,##0';
-                    if (C === 7) worksheet[cellRef].z = '#,##0" ₫"';
-                }
-            });
-
-            if (totalSummaryRowIndex !== -1) {
-                const R = totalSummaryRowIndex;
-                for (let C = 0; C <= 7; ++C) {
-                    const cellRef = XLSX.utils.encode_cell({ r: R, c: C });
-                    if (!worksheet[cellRef]) worksheet[cellRef] = { v: "" };
-                    worksheet[cellRef].s = {
-                        fill: { fgColor: { rgb: "DBEAFE" } },
-                        font: { bold: true, color: { rgb: "1D4ED8" }, sz: 11 },
-                        alignment: { vertical: "center", horizontal: C >= 6 ? "right" : "left" },
-                        border: { top: { style: "thin", color: { rgb: "2563EB" } }, bottom: { style: "double", color: { rgb: "2563EB" } } }
-                    };
-                    if (C === 6) worksheet[cellRef].z = '#,##0';
-                    if (C === 7) worksheet[cellRef].z = '#,##0" ₫"';
-                }
-            }
-
-            const workbook = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(workbook, worksheet, "Phan_Loai_Ton_Kho");
-            XLSX.writeFile(workbook, `Bao_Cao_Phan_Loai_Theo_Danh_Muc_${new Date().toISOString().split('T')[0]}.xlsx`);
+            await xlDownload(wb, `Bao_Cao_Phan_Loai_Theo_Danh_Muc_${new Date().toISOString().split('T')[0]}.xlsx`);
             showToast('Đã xuất Excel phân loại theo danh mục thành công!');
         }
 
-        function exportOrderTemplateExcel() {
-            if (window.products.length === 0) {
-                showToast('Chưa có sản phẩm nào trong hệ thống!', 'error');
-                return;
-            }
+        // 2. XUẤT FILE MẪU BÁN HÀNG TỰ ĐỘNG
+        async function exportOrderTemplateExcel() {
+            if (window.products.length === 0) { showToast('Chưa có sản phẩm nào trong hệ thống!', 'error'); return; }
+            if (typeof ExcelJS === 'undefined') { showToast('Chưa tải được thư viện xuất Excel (ExcelJS). Kiểm tra kết nối mạng!', 'error'); return; }
 
-            const excelRows = [];
-            excelRows.push(["FILE MẪU TẠO ĐƠN BÁN HÀNG TỰ ĐỘNG"]);
-            excelRows.push(["* Hướng dẫn: Điền số lượng sản phẩm muốn mua vào cột 'Số Lượng Mua *', sau đó tải file lên hệ thống."]);
-            excelRows.push([]);
-            excelRows.push(["STT", "Mã SP", "Tên Sản Phẩm", "Danh Mục", "Giá Bán (₫)", "Tồn Kho Hiện Tại", "Số Lượng Mua *"]);
+            const NC = 7;
+            const ALIGN = ['center', 'left', 'left', 'left', 'right', 'center', 'center'];
+            const wb = new ExcelJS.Workbook();
+            const ws = wb.addWorksheet('Mau_Tao_Don_Hang', { views: [{ state: 'frozen', ySplit: 4, showGridLines: false }] });
+            ws.columns = [6, 15, 36, 18, 18, 16, 18].map(width => ({ width }));
 
-            window.products.forEach((p, idx) => {
-                excelRows.push([
-                    idx + 1,
-                    p.code,
-                    p.name,
-                    p.category,
-                    Number(p.sellPrice) || 0,
-                    Number(p.stock) || 0,
-                    ""
-                ]);
+            xlTitle(ws, 'FILE MẪU TẠO ĐƠN BÁN HÀNG TỰ ĐỘNG', NC, 'FF1E3A8A', 16, 34);
+            const tip = ws.addRow(["Hướng dẫn: điền số lượng muốn mua vào cột 'Số Lượng Mua *' (ô vàng), sau đó tải file lên hệ thống."]);
+            ws.mergeCells(tip.number, 1, tip.number, NC);
+            tip.getCell(1).font = { name: 'Arial', size: 10, italic: true, color: { argb: 'FFB45309' } };
+            ws.addRow([]);
+
+            const head = ws.addRow(['STT', 'Mã SP', 'Tên Sản Phẩm', 'Danh Mục', 'Giá Bán (₫)', 'Tồn Kho Hiện Tại', 'Số Lượng Mua *']);
+            xlPaintRow(head, NC, 'FF1E293B', XL_WHITE, ALIGN.map(() => 'center'));
+            head.getCell(7).fill = xlFill('FF2563EB');
+            head.height = 24;
+
+            window.products.forEach((p, i) => {
+                const r = ws.addRow([i + 1, p.code, p.name, p.category, Number(p.sellPrice) || 0, Number(p.stock) || 0, null]);
+                xlPaintRow(r, NC, ROW_COLORS[i % ROW_COLORS.length], null, ALIGN);
+                r.getCell(5).numFmt = XL_MONEY; r.getCell(6).numFmt = XL_INT;
+                const q = r.getCell(7);
+                q.fill = xlFill('FFFEF08A');
+                q.font = { name: 'Arial', size: 11, bold: true, color: { argb: 'FF92400E' } };
+                q.numFmt = XL_INT;
+                q.dataValidation = { type: 'whole', operator: 'greaterThanOrEqual', formulae: [0], allowBlank: true, showErrorMessage: true, errorTitle: 'Giá trị không hợp lệ', error: 'Vui lòng nhập số nguyên từ 0 trở lên.' };
+                r.height = 20;
             });
 
-            const worksheet = XLSX.utils.aoa_to_sheet(excelRows);
-
-            worksheet['!cols'] = [
-                { wch: 6 }, { wch: 15 }, { wch: 35 }, { wch: 18 },
-                { wch: 18 }, { wch: 16 }, { wch: 18 }
-            ];
-
-            const range = XLSX.utils.decode_range(worksheet['!ref']);
-            const thinBorder = {
-                top: { style: "thin", color: { rgb: "CBD5E1" } },
-                bottom: { style: "thin", color: { rgb: "CBD5E1" } },
-                left: { style: "thin", color: { rgb: "CBD5E1" } },
-                right: { style: "thin", color: { rgb: "CBD5E1" } }
-            };
-
-            for (let C = 0; C <= 6; ++C) {
-                const cellRef = XLSX.utils.encode_cell({ r: 3, c: C });
-                if (worksheet[cellRef]) {
-                    worksheet[cellRef].s = {
-                        fill: { fgColor: { rgb: C === 6 ? "2563EB" : "1E293B" } },
-                        font: { bold: true, color: { rgb: "FFFFFF" }, sz: 10 },
-                        alignment: { vertical: "center", horizontal: C === 0 || C === 5 || C === 6 ? "center" : (C === 4 ? "right" : "left") },
-                        border: thinBorder
-                    };
-                }
-            }
-
-            for (let R = 4; R <= range.e.r; ++R) {
-                const isEven = (R % 2 === 0);
-                for (let C = 0; C <= 6; ++C) {
-                    const cellRef = XLSX.utils.encode_cell({ r: R, c: C });
-                    if (!worksheet[cellRef]) worksheet[cellRef] = { v: "" };
-                    worksheet[cellRef].s = {
-                        fill: { fgColor: { rgb: C === 6 ? "FEF08A" : (isEven ? "F8FAFC" : "FFFFFF") } },
-                        font: { bold: C === 6, color: { rgb: "0F172A" }, sz: 10 },
-                        alignment: { vertical: "center", horizontal: C === 0 || C === 5 || C === 6 ? "center" : (C === 4 ? "right" : "left") },
-                        border: thinBorder
-                    };
-                    if (C === 4) worksheet[cellRef].z = '#,##0" ₫"';
-                    if (C === 5 || C === 6) worksheet[cellRef].z = '#,##0';
-                }
-            }
-
-            const workbook = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(workbook, worksheet, "Mau_Tao_Don_Hang");
-            XLSX.writeFile(workbook, `Mau_Tao_Don_Hang_POS_${new Date().toISOString().split('T')[0]}.xlsx`);
+            await xlDownload(wb, `Mau_Tao_Don_Hang_POS_${new Date().toISOString().split('T')[0]}.xlsx`);
             showToast('Đã tải xuống file mẫu tạo đơn thành công!');
         }
 
+        // 3. ĐỌC FILE EXCEL UPLOAD TẠO ĐƠN
         function handleOrderExcelSelect(e) {
             const file = e.target.files[0];
             if (!file) return;
@@ -2256,7 +2181,6 @@
                     const workbook = XLSX.read(data, { type: 'array' });
                     const worksheet = workbook.Sheets[workbook.SheetNames[0]];
 
-                    // Tự động tìm dòng chứa tiêu đề 'Mã SP'
                     let headerRow = -1;
                     const jsonRaw = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: '' });
                     for (let r = 0; r < jsonRaw.length; r++) {
@@ -2472,9 +2396,6 @@
             });
         }
 
-        // =========================================================================
-        // NHẬP KHO: LỌC THEO DANH MỤC TRƯỚC KHI TÌM KIẾM
-        // =========================================================================
         function onImportCategoryChange() {
             const input = document.getElementById('import-search-input');
             if (input && input.value.trim()) {
